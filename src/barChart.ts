@@ -1,7 +1,7 @@
 import powerbi from "powerbi-visuals-api";
 import "./../style/visual.less";
 
-import { min } from "d3-array";
+import { max, min } from "d3-array";
 import { scaleBand, scaleLinear} from "d3-scale";
 import { BaseType, select, Selection } from  "d3-selection";
 import {
@@ -398,6 +398,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
     let overlapDataValueMax = Math.max.apply(Math, overlapDataValue);
     dataMax = <number> dataValue.maxLocal <= overlapDataValueMax ? overlapDataValueMax : dataValue.maxLocal;
 
+
     return {
         dataMax,
         dataPoints: IBarChartDataPoints,
@@ -554,6 +555,7 @@ export class BarChart implements IVisual {
         //  |                               |  |  top and bottom padding are equal
         //  |_______________________________|  _
 
+ 
         this.events.renderingStarted(options);
         let viewModel: IBarChartViewModel = visualTransform(options, this.host);
 
@@ -572,7 +574,7 @@ export class BarChart implements IVisual {
         } else {
             xScaledMin = BarChart.Config.xScaledMin;
         }
-        let outerPadding = -0.1;
+        let outerPadding = 0.1; //-0.1
         // calcX is the calculated height of the bar+inner padding that will be required if we simply
         // distribute the height with the bar count (no scrolling)
         let calcX = height /
@@ -582,7 +584,7 @@ export class BarChart implements IVisual {
         let calcHeight = (-2 * outerPadding - BarChart.Config.xScalePadding + viewModel.dataPoints.length)
              * xScaledMin;
         // The parent element is not directly available to us since we are in a sandbox
-
+        
         if (calcX > xScaledMax) {
             if (xScaledMax >= xScaledMin) {
                 let tempouterPadding = (height - (-BarChart.Config.xScalePadding + viewModel.dataPoints.length)
@@ -620,10 +622,13 @@ export class BarChart implements IVisual {
             .paddingOuter(outerPadding);
         // .rangeBands([5, height], BarChart.Config.barPadding, outerPadding);
 
+            /////////// yScale.bandwidth
+            let yHeight = yScale.bandwidth();
+
         // cap the fontsize between 8.5 and 40 for aesthetics (only when autoscaling font)
         let fontSizeToUse = this.IBarChartSettings.fontParams && this.IBarChartSettings.fontParams.show
             ? this.IBarChartSettings.fontParams.fontSize
-            : yScale.bandwidth() / BarChart.Config.fontScaleFactor;
+            : yHeight / BarChart.Config.fontScaleFactor;
         if (fontSizeToUse < 8.5 && !this.IBarChartSettings.fontParams.show) {
             fontSizeToUse = 8.5;
         }
@@ -638,8 +643,6 @@ export class BarChart implements IVisual {
         let formattedValue = viewModel.dataPoints.length > 0
             ? viewModel.dataPoints[indexForDataMax].formattedValue
             : "";
-       
-            
         let textProperties: ITextProperties = {
             fontFamily: "sans-serif",
             fontSize: fontSizeToUse + "px",
@@ -661,6 +664,21 @@ export class BarChart implements IVisual {
             .domain([0, viewModel.dataMax])
             .range([0, width - offset - 40]); // subtracting 40 for padding between the bar and the label
             
+        // MAX Category Range ***********************************/
+        let indexForCateMax = getIndexForCateMax(viewModel.dataPoints);
+        let CateformattedValue = viewModel.dataPoints.length > 0
+        ? viewModel.dataPoints[indexForCateMax].category
+        : "";
+        let CateProperties: ITextProperties = {
+            fontFamily: "sans-serif",
+            fontSize: fontSizeToUse + "px",
+            text: CateformattedValue,
+        }; 
+
+        let CateOffset = (yHeight > 10 + BarChart.Config.xScalePadding + textMeasurementService.textMeasurementService.measureSvgTextWidth(CateProperties) 
+            ? yHeight/2 
+            : 10 + BarChart.Config.xScalePadding + textMeasurementService.textMeasurementService.measureSvgTextWidth(CateProperties)
+        );
 
         // empty rect to take full width for clickable area for clearing selection
 
@@ -697,7 +715,7 @@ export class BarChart implements IVisual {
             .classed("bar", true)
             .attr("x", BarChart.Config.xScalePadding)// .merge(bars)
             .attr("y", (d) => yScale(d.category))
-            .attr("height", yScale.bandwidth())
+            .attr("height", yHeight)
             .attr("width", (d) => xScale(<number> d.value))
 
             .attr("selected", (d) => d.selected);
@@ -716,15 +734,16 @@ export class BarChart implements IVisual {
 
         rects
             .merge(mergeElement)
-            .attr("x", BarChart.Config.xScalePadding)
+            //.attr("x", BarChart.Config.xScalePadding)
+            .attr("x",CateOffset)
             .attr("y", (d) => yScale(d.category))
-            .attr("height", yScale.bandwidth() /
+            .attr("height", yHeight /
                 (
                     (settings.barShape.shape === "Line" ||
                      settings.barShape.shape === "Lollipop" ||
                      settings.barShape.shape === "Hammer Head") ? 8 : 1
                 ))
-            .attr("width", (d) => xScale(<number> d.value))
+            .attr("width", (d) => xScale(<number> d.value) - CateOffset)
             .attr("fill", viewModel.settings.generalView.barsColor.solid.color)
             .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
             .attr("selected", (d) => d.selected);
@@ -741,16 +760,17 @@ export class BarChart implements IVisual {
         overlapRects
             .merge(mergeElement)
             // overlapRects
-            .attr("x", BarChart.Config.xScalePadding)
+            //.attr("x", BarChart.Config.xScalePadding)
+            .attr("x",CateOffset)
             .attr("y", (d) => yScale(d.category))
-            .attr("height", yScale.bandwidth() /
+            .attr("height", yHeight /
                 (
                     (
                         settings.barShape.shape === "Line" ||
                         settings.barShape.shape === "Lollipop" ||
                         settings.barShape.shape === "Hammer Head"
                     ) ? 8 : 1))
-            .attr("width", (d) => xScale(<number> d.overlapValue)).merge(mergeElement)
+            .attr("width", (d) => xScale(<number> d.overlapValue) - CateOffset).merge(mergeElement)
             .attr("fill", viewModel.settings.generalView.overlapColor.solid.color)
             .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
             .attr("selected", (d) => d.selected);
@@ -766,10 +786,10 @@ export class BarChart implements IVisual {
 
             circle
                 .merge(mergeElement)
-                .attr("cx", (d) => getHeadPositionX(d.value, d.width) - 2 - yScale.bandwidth() / 8)
-                .attr("cy", (d) => yScale(d.category) + yScale.bandwidth() / 16)
+                .attr("cx", (d) => getHeadPositionX(d.value, d.width) - 2 - yHeight / 8)
+                .attr("cy", (d) => yScale(d.category) + yHeight / 16)
                 // - textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4,
-                .attr("r", yScale.bandwidth() / 8)
+                .attr("r", yHeight / 8)
                 .attr("fill", viewModel.settings.barShape.headColor.solid.color)
                 .attr("fill-opacity", viewModel.settings.generalView.opacity / 100);
             circle.exit().remove();
@@ -785,13 +805,13 @@ export class BarChart implements IVisual {
                 .classed("head", true);
 
             line.merge(mergeElement)
-                .attr("x1", (d) => getHeadPositionX(d.value, d.width) - 7 - yScale.bandwidth() / 32)
-                .attr("x2", (d) => getHeadPositionX(d.value, d.width) - 7 - yScale.bandwidth() / 32)
-                .attr("y1", (d) => yScale(d.category) - yScale.bandwidth() / 16)
+                .attr("x1", (d) => getHeadPositionX(d.value, d.width) - 7 - yHeight / 32)
+                .attr("x2", (d) => getHeadPositionX(d.value, d.width) - 7 - yHeight / 32)
+                .attr("y1", (d) => yScale(d.category) - yHeight / 16)
                 // - textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4,
-                .attr("y2", (d) => yScale(d.category) + yScale.bandwidth() / 16 + yScale.bandwidth() / 8)
+                .attr("y2", (d) => yScale(d.category) + yHeight / 16 + yHeight / 8)
                 // - textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4,
-                .attr("stroke-width", yScale.bandwidth() / 16)
+                .attr("stroke-width", yHeight / 16)
                 .attr("stroke", viewModel.settings.barShape.headColor.solid.color)
                 .attr("stroke-opacity", viewModel.settings.generalView.opacity / 100);
             line.exit().remove();
@@ -811,18 +831,19 @@ export class BarChart implements IVisual {
         mergeElement = texts
             .enter()
             .append<SVGElement> ("text")
-            .classed("bar-text", true);
+            .classed("bar-text", true)
+            .attr("text-anchor", "end");
 
         texts.merge(mergeElement)
-            .attr("height", yScale.bandwidth())
-            .attr("y", (d) => yScale(d.category) + yScale.bandwidth() /
-                2 + textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4)
-            .attr("x", 5)
+            .attr("height", yHeight)
+            .attr("y", (d) => yScale(d.category) + yHeight / 2 + textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4)
+            .attr("x", (d) => CateOffset-10)
             .attr("font-size", fontSizeToUse)
             .attr("fill", viewModel.settings.generalView.textColor.solid.color)
-
-            .text((d) => d.category )
-            .each((d) => d.width = xScale(<number> d.value));
+            .attr("width", (d) =>  CateOffset)
+            .text((d) => d.category)
+            
+            //.each((d) => d.width = xScale(<number> d.value));
         if (this.IBarChartSettings.experimental.show) {
             texts.attr("style", "mix-blend-mode: " + this.IBarChartSettings.experimental.blendMode);
         } else {
@@ -833,7 +854,6 @@ export class BarChart implements IVisual {
 
         ////////////////////////////////////////////////////////////////////// BarLabel 
         
-
         if (viewModel.settings.showBarLabels.show) {
 
             let valuesRect = bars.selectAll("rect.valuesRect").data((d) => [d]);
@@ -871,7 +891,7 @@ export class BarChart implements IVisual {
                 .append<SVGElement> ("text")
                 .classed("bar-value", true);
 
-            textValues.merge(mergeElement).attr("height", yScale.bandwidth())
+            textValues.merge(mergeElement).attr("height", yHeight)
                 .attr("y", (d) => getTextPositionY(d.category, textProperties))
                 .attr("x", (d) => {
                     return viewModel.settings.alignBarLabels.show
@@ -974,18 +994,18 @@ export class BarChart implements IVisual {
 
         function getTextPositionY(category: string, textProps: TextProperties) {
             if (settings.barShape.shape === "Bar") {
-                return yScale(category) + yScale.bandwidth() / 2 +
+                return yScale(category) + yHeight / 2 +
                     textMeasurementService.textMeasurementService.measureSvgTextHeight(textProps) / 4;
             } else if (settings.barShape.shape === "Line" ||
                     settings.barShape.shape === "Lollipop" ||
                     settings.barShape.shape === "Hammer Head") {
                 if (settings.barShape.labelPosition === "Top") {
                     return yScale(category) +
-                    yScale.bandwidth() / 16 +
+                    yHeight / 16 +
                     textMeasurementService.textMeasurementService.measureSvgTextHeight(textProps) / 4;
                 } else {
                     return yScale(category) +
-                    yScale.bandwidth() / 2 +
+                    yHeight / 2 +
                     textMeasurementService.textMeasurementService.measureSvgTextHeight(textProps) / 4;
                 }
             }
@@ -1030,9 +1050,9 @@ export class BarChart implements IVisual {
                 objectEnumeration.push({
                     objectName,
                     properties: {
+                        overlapColor: this.IBarChartSettings.generalView.overlapColor,
                         barsColor: this.IBarChartSettings.generalView.barsColor,
                         opacity: this.IBarChartSettings.generalView.opacity,
-                        overlapColor: this.IBarChartSettings.generalView.overlapColor,
                         textColor: this.IBarChartSettings.generalView.textColor,
                     },
                     selector: null,
@@ -1231,3 +1251,21 @@ function getIndexForDataMax(arr) {
     }
     return p;
 }
+function getIndexForCateMax(arr) {
+    if (arr.length < 1) {
+        return -1;
+    }
+    let i = 0;
+    let p = 0;
+    let max = arr[i].currTextWidth;
+    console.log(max);
+    for (i = 1; i < arr.length; i++) {
+
+        if (arr[i].currTextWidth > max) {
+            max = arr[i].currTextWidth;
+            p = i;
+        }
+    }
+    return p;
+}
+

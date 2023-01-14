@@ -230,7 +230,7 @@
                     }
                 },
                 "barsColor": {
-                    "displayName": "Bars Color",
+                    "displayName": "Back Bars Color",
                     "type": {
                         "fill": {
                             "solid": {
@@ -240,7 +240,7 @@
                     }
                 },
                 "overlapColor": {
-                    "displayName": "Overlap Bars Color",
+                    "displayName": "Front Bars Color",
                     "type": {
                         "fill": {
                             "solid": {
