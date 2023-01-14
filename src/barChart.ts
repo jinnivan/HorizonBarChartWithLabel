@@ -548,7 +548,7 @@ export class BarChart implements IVisual {
         } else {
             xScaledMin = BarChart.Config.xScaledMin;
         }
-        let outerPadding = -0.1; //-0.1
+        let outerPadding = 0.1; //-0.1
         // calcX is the calculated height of the bar+inner padding that will be required if we simply
         // distribute the height with the bar count (no scrolling)
         let calcX = height /
@@ -590,7 +590,7 @@ export class BarChart implements IVisual {
         this.xAxis.style("font-size", parseInt(min(<any>[height, width]), 10) * BarChart.Config.xAxisFontMultiplier);
         // this.xAxis.attr("font-size",parseInt(min([height, width])) * BarChart.Config.xAxisFontMultiplier)
 
-        
+        /*
         let yScale = scaleBand()
             .domain(viewModel.dataPoints.map((d) => d.category))
             .rangeRound([5, height])
@@ -601,7 +601,13 @@ export class BarChart implements IVisual {
             /////////// yScale.bandwidth
             
         //let yHeight = yScale.bandwidth();
-        let yHeight = yScale.bandwidth();
+        */
+        let yScale = scaleBand()
+            .domain(viewModel.dataPoints.map((d) => d.category))
+            .rangeRound([height,0]).paddingOuter(0.1)
+            //.rangeBands([5, height], BarChart.Config.barPadding, outerPadding);
+
+        let yHeight = 20;
 
         // cap the fontsize between 8.5 and 40 for aesthetics (only when autoscaling font)
         let fontSizeToUse = this.IBarChartSettings.fontParams && this.IBarChartSettings.fontParams.show

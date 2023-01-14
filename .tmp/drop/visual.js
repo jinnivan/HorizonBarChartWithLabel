@@ -30232,7 +30232,7 @@ class BarChart {
         else {
             xScaledMin = BarChart.Config.xScaledMin;
         }
-        let outerPadding = -0.1; //-0.1
+        let outerPadding = 0.1; //-0.1
         // calcX is the calculated height of the bar+inner padding that will be required if we simply
         // distribute the height with the bar count (no scrolling)
         let calcX = height /
@@ -30272,15 +30272,23 @@ class BarChart {
         this.svg.attr("height", height);
         this.xAxis.style("font-size", parseInt((0,d3_array__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .Z)([height, width]), 10) * BarChart.Config.xAxisFontMultiplier);
         // this.xAxis.attr("font-size",parseInt(min([height, width])) * BarChart.Config.xAxisFontMultiplier)
-        let yScale = (0,d3_scale__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .Z)()
+        /*
+        let yScale = scaleBand()
             .domain(viewModel.dataPoints.map((d) => d.category))
             .rangeRound([5, height])
             .padding(BarChart.Config.barPadding)
-            .paddingOuter(outerPadding);
-        //.rangeBands([5, height], BarChart.Config.barPadding, outerPadding);
-        /////////// yScale.bandwidth
+            .paddingOuter(outerPadding)
+            //.rangeBands([5, height], BarChart.Config.barPadding, outerPadding);
+
+            /////////// yScale.bandwidth
+            
         //let yHeight = yScale.bandwidth();
-        let yHeight = yScale.bandwidth();
+        */
+        let yScale = (0,d3_scale__WEBPACK_IMPORTED_MODULE_7__/* ["default"] */ .Z)()
+            .domain(viewModel.dataPoints.map((d) => d.category))
+            .rangeRound([height, 0]).paddingOuter(0.1);
+        //.rangeBands([5, height], BarChart.Config.barPadding, outerPadding);
+        let yHeight = 20;
         // cap the fontsize between 8.5 and 40 for aesthetics (only when autoscaling font)
         let fontSizeToUse = this.IBarChartSettings.fontParams && this.IBarChartSettings.fontParams.show
             ? this.IBarChartSettings.fontParams.fontSize
