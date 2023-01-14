@@ -2,21 +2,26 @@ import { BarChart } from "../../src/barChart";
 import powerbiVisualsApi from "powerbi-visuals-api";
 import IVisualPlugin = powerbiVisualsApi.visuals.plugins.IVisualPlugin;
 import VisualConstructorOptions = powerbiVisualsApi.extensibility.visual.VisualConstructorOptions;
-
+import DialogConstructorOptions = powerbiVisualsApi.extensibility.visual.DialogConstructorOptions;
 var powerbiKey: any = "powerbi";
 var powerbi: any = window[powerbiKey];
 var BarChartF5983CEA542C47889C9DE852B430DE5F_DEBUG: IVisualPlugin = {
     name: 'BarChartF5983CEA542C47889C9DE852B430DE5F_DEBUG',
     displayName: 'Horizontal Bar Chart',
     class: 'BarChart',
-    apiVersion: '3.2.0',
+    apiVersion: '3.8.0',
     create: (options: VisualConstructorOptions) => {
         if (BarChart) {
             return new BarChart(options);
         }
         throw 'Visual instance not found';
     },
-    
+    createModalDialog: (dialogId: string, options: DialogConstructorOptions, initialState: object) => {
+        const dialogRegistry = globalThis.dialogRegistry;
+        if (dialogId in dialogRegistry) {
+            new dialogRegistry[dialogId](options, initialState);
+        }
+    },
     custom: true
 };
 if (typeof powerbi !== "undefined") {

@@ -6,13 +6,13 @@
             "kind": "Grouping"
         },
         {
-            "displayName": "Front Bar Values",
-            "name": "overlapValues",
+            "displayName": "Measure",
+            "name": "measure",
             "kind": "Measure"
         },
         {
-            "displayName": "Back Bar Values",
-            "name": "measure",
+            "displayName": "Overlap Values",
+            "name": "overlapValues",
             "kind": "Measure"
         },
         {
@@ -79,17 +79,17 @@
                         },
                         {
                             "bind": {
+                                "to": "LabelValues"
+                            }
+                        },
+                        {
+                            "bind": {
                                 "to": "tooltip"
                             }
                         },
                         {
                             "bind": {
                                 "to": "overlapValues"
-                            }
-                        },
-                        {
-                            "bind": {
-                                "to": "LabelValues"
                             }
                         }
                     ]

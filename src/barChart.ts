@@ -1,6 +1,5 @@
 import powerbi from "powerbi-visuals-api";
 import "./../style/visual.less";
-
 import { max, min } from "d3-array";
 import { scaleBand, scaleLinear} from "d3-scale";
 import { BaseType, select, Selection } from  "d3-selection";
@@ -230,19 +229,19 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
 
     let categorical = dataViews[0].categorical;
     let category = categorical.categories[0];
-    let dataValue = categorical.values[0];
     let metadata = dataViews[0].metadata;
+    let dataValue = categorical.values[0];
 
     let overlapDataValue = [];
-    let overlapIndex = getOverlapIndex(metadata);
+    let overlapIndex = getIndex(metadata,"overlapValues");
     if (overlapIndex !== -1) {
-        overlapDataValue = getDataValueForOverlapValue(categorical.values, overlapIndex);
+        overlapDataValue = getDataValue(categorical.values, overlapIndex);
     }
 
     let LabelDataValue = [];
-    let LabelIndex = getLabelIndex(metadata);
+    let LabelIndex = getIndex(metadata,"LabelValues");
     if (LabelIndex !== -1) {
-        LabelDataValue = getDataValueForLabelValue(categorical.values, LabelIndex);
+        LabelDataValue = getDataValue(categorical.values, LabelIndex);
     }
 
     let tooltipData = categorical.values.slice(1, categorical.values.length);
@@ -381,6 +380,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             formattedOverlapValue: "",
             formattedValue: valueFormatterForCategories.format(dataValue.values[i]),
             overlapValue: overlapDataValue.length > 0 ? overlapDataValue[i] : null,
+            
             LabelformattedValue: LabelDataValue.length > 0 ? LabelDataValue[i] : null,
             precision: formattingService.numberFormat.isStandardFormat(format) === false ?
                 formattingService.numberFormat.getCustomFormatMetadata(format, true).precision : null,
@@ -407,47 +407,21 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
     };
 }
 
-function getOverlapIndex(metadata) {
+function getIndex(metadata,Property) {
     let index = -1;
     if (metadata.columns && metadata.columns.length > 0) {
         metadata.columns.forEach((element) => {
-            if (element.roles && element.roles.hasOwnProperty("overlapValues")) {
+            if (element.roles && element.roles.hasOwnProperty(Property)) {
                 index = element.index;
             }
         });
     }
     return index;
 }
-function getDataValueForOverlapValue(values, overlapIndex) {
+function getDataValue(values, Index) {
     let index = -1;
     for (let i = 0; i < values.length; i++) {
-        if (values[i].source.index === overlapIndex) {
-            index = i;
-            break;
-        }
-    }
-    if (index !== -1) {
-        return values[index].values;
-    } else {
-        return [];
-    }
-}
-
-function getLabelIndex(metadata) {
-    let index = -1;
-    if (metadata.columns && metadata.columns.length > 0) {
-        metadata.columns.forEach((element) => {
-            if (element.roles && element.roles.hasOwnProperty("LabelValues")) {
-                index = element.index;
-            }
-        });
-    }
-    return index;
-}
-function getDataValueForLabelValue(values, LabelIndex) {
-    let index = -1;
-    for (let i = 0; i < values.length; i++) {
-        if (values[i].source.index === LabelIndex) {
+        if (values[i].source.index === Index) {
             index = i;
             break;
         }
@@ -574,7 +548,7 @@ export class BarChart implements IVisual {
         } else {
             xScaledMin = BarChart.Config.xScaledMin;
         }
-        let outerPadding = 0.1; //-0.1
+        let outerPadding = -0.1; //-0.1
         // calcX is the calculated height of the bar+inner padding that will be required if we simply
         // distribute the height with the bar count (no scrolling)
         let calcX = height /
@@ -615,15 +589,19 @@ export class BarChart implements IVisual {
 
         this.xAxis.style("font-size", parseInt(min(<any>[height, width]), 10) * BarChart.Config.xAxisFontMultiplier);
         // this.xAxis.attr("font-size",parseInt(min([height, width])) * BarChart.Config.xAxisFontMultiplier)
+
+        
         let yScale = scaleBand()
             .domain(viewModel.dataPoints.map((d) => d.category))
             .rangeRound([5, height])
             .padding(BarChart.Config.barPadding)
-            .paddingOuter(outerPadding);
-        // .rangeBands([5, height], BarChart.Config.barPadding, outerPadding);
+            .paddingOuter(outerPadding)
+            //.rangeBands([5, height], BarChart.Config.barPadding, outerPadding);
 
             /////////// yScale.bandwidth
-            let yHeight = yScale.bandwidth();
+            
+        //let yHeight = yScale.bandwidth();
+        let yHeight = yScale.bandwidth();
 
         // cap the fontsize between 8.5 and 40 for aesthetics (only when autoscaling font)
         let fontSizeToUse = this.IBarChartSettings.fontParams && this.IBarChartSettings.fontParams.show
@@ -659,11 +637,7 @@ export class BarChart implements IVisual {
             text: LabelformattedValue,
         }; 
 
-        let offset = textMeasurementService.textMeasurementService.measureSvgTextWidth(labelProperties);
-        let xScale = scaleLinear()
-            .domain([0, viewModel.dataMax])
-            .range([0, width - offset - 40]); // subtracting 40 for padding between the bar and the label
-            
+        
         // MAX Category Range ***********************************/
         let indexForCateMax = getIndexForCateMax(viewModel.dataPoints);
         let CateformattedValue = viewModel.dataPoints.length > 0
@@ -674,11 +648,17 @@ export class BarChart implements IVisual {
             fontSize: fontSizeToUse + "px",
             text: CateformattedValue,
         }; 
-
         let CateOffset = (yHeight > 10 + BarChart.Config.xScalePadding + textMeasurementService.textMeasurementService.measureSvgTextWidth(CateProperties) 
             ? yHeight/2 
             : 10 + BarChart.Config.xScalePadding + textMeasurementService.textMeasurementService.measureSvgTextWidth(CateProperties)
-        );
+        );        
+        let offset = textMeasurementService.textMeasurementService.measureSvgTextWidth(labelProperties);
+
+        let xScale = scaleLinear()
+            .domain([0, viewModel.dataMax])
+            .range([0, width - offset - CateOffset]); // subtracting 40 for padding between the bar and the label
+            
+
 
         // empty rect to take full width for clickable area for clearing selection
 
@@ -743,7 +723,7 @@ export class BarChart implements IVisual {
                      settings.barShape.shape === "Lollipop" ||
                      settings.barShape.shape === "Hammer Head") ? 8 : 1
                 ))
-            .attr("width", (d) => xScale(<number> d.value) - CateOffset)
+            .attr("width", (d) => xScale(<number> d.value))
             .attr("fill", viewModel.settings.generalView.barsColor.solid.color)
             .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
             .attr("selected", (d) => d.selected);
@@ -762,15 +742,31 @@ export class BarChart implements IVisual {
             // overlapRects
             //.attr("x", BarChart.Config.xScalePadding)
             .attr("x",CateOffset)
-            .attr("y", (d) => yScale(d.category))
+            //.attr("y", (d) => yScale(d.category))
+            .attr("y", (d) => yScale(d.category) + ( yHeight /
+            (
+                (
+                    settings.barShape.shape === "Line" ||
+                    settings.barShape.shape === "Lollipop" ||
+                    settings.barShape.shape === "Hammer Head"
+                ) ? 8 : 1) - yHeight /
+                (
+                    (
+                        settings.barShape.shape === "Line" ||
+                        settings.barShape.shape === "Lollipop" ||
+                        settings.barShape.shape === "Hammer Head"
+                    ) ? 8 : 1.5)
+                
+            ) / 2
+            )
             .attr("height", yHeight /
                 (
                     (
                         settings.barShape.shape === "Line" ||
                         settings.barShape.shape === "Lollipop" ||
                         settings.barShape.shape === "Hammer Head"
-                    ) ? 8 : 1))
-            .attr("width", (d) => xScale(<number> d.overlapValue) - CateOffset).merge(mergeElement)
+                    ) ? 8 : 1.5))
+            .attr("width", (d) => xScale(<number> d.overlapValue)).merge(mergeElement)
             .attr("fill", viewModel.settings.generalView.overlapColor.solid.color)
             .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
             .attr("selected", (d) => d.selected);
@@ -867,8 +863,8 @@ export class BarChart implements IVisual {
             valuesRect
                 .merge(mergeElement)
                 .attr("x", (d) => viewModel.settings.alignBarLabels.show
-                    ? getTextPositionX( viewModel.dataMax, d.currTextWidth) - 2
-                    : getTextPositionX(d.value, d.currTextWidth) - 2)
+                    ? CateOffset + getTextPositionX( viewModel.dataMax, d.currTextWidth) - 2
+                    : CateOffset + getTextPositionX(d.value, d.currTextWidth) - 2)
                 .attr("y", (d) => getTextPositionY(d.category, labelProperties) - 3
                     / 4 * textMeasurementService.textMeasurementService.measureSvgTextHeight(labelProperties))
                 .attr("height", textMeasurementService.textMeasurementService.measureSvgTextHeight(labelProperties))
@@ -895,8 +891,8 @@ export class BarChart implements IVisual {
                 .attr("y", (d) => getTextPositionY(d.category, textProperties))
                 .attr("x", (d) => {
                     return viewModel.settings.alignBarLabels.show
-                        ? getTextPositionX(viewModel.dataMax, d.currTextWidth)
-                        : getTextPositionX(d.value, d.currTextWidth);
+                        ? CateOffset + getTextPositionX(viewModel.dataMax, d.currTextWidth)
+                        : CateOffset + getTextPositionX(d.value, d.currTextWidth);
                 })
                 .attr("font-size", fontSizeToUse)
                 .attr("fill", viewModel.settings.showBarLabels.textColor.solid.color)
@@ -1258,7 +1254,6 @@ function getIndexForCateMax(arr) {
     let i = 0;
     let p = 0;
     let max = arr[i].currTextWidth;
-    console.log(max);
     for (i = 1; i < arr.length; i++) {
 
         if (arr[i].currTextWidth > max) {
