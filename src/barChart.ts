@@ -232,21 +232,26 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
     let categorical = dataViews[0].categorical;
     let category = categorical.categories[0];
     let metadata = dataViews[0].metadata;
+
     let dataValue = categorical.values[0];
+    let dataIndex = getIndex(metadata,"measure");
+    if (dataIndex !== -1) {
+        dataValue = getDataValue(categorical.values, dataIndex);
+    }
 
     let overlapDataValue = [];
     let overlapIndex = getIndex(metadata,"overlapValues");
     if (overlapIndex !== -1) {
-        overlapDataValue = getDataValue(categorical.values, overlapIndex);
+        overlapDataValue = getDataValue(categorical.values, overlapIndex).values;
     }
 
     let LabelDataValue = [];
     let LabelIndex = getIndex(metadata,"LabelValues");
     if (LabelIndex !== -1) {
-        LabelDataValue = getDataValue(categorical.values, LabelIndex);
+        LabelDataValue = getDataValue(categorical.values, LabelIndex).values;
     }
 
-    let tooltipData = categorical.values.slice(1, categorical.values.length);
+    let tooltipData = categorical.values.slice(0, categorical.values.length); //loop tooltip index
 
     let valueFormatterForCategories: IValueFormatter = valueFormatter.valueFormatter.create({
         format: valueFormatter.valueFormatter.getFormatStringByColumn(category.source),
@@ -328,6 +333,8 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
 
     };
 
+
+    /********** TOOLTIP *************/
     for (let i = 0, len = Math.max(category.values.length, dataValue.values.length); i < len; i++) {
         let defaultColor: Fill = {
             solid: {
@@ -384,7 +391,6 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             formattedOverlapValue: "",
             formattedValue: valueFormatterForCategories.format(dataValue.values[i]),
             overlapValue: overlapDataValue.length > 0 ? overlapDataValue[i] : null,
-            
             LabelformattedValue: LabelDataValue.length > 0 ? LabelDataValue[i] : null,
             precision: formattingService.numberFormat.isStandardFormat(format) === false ?
                 formattingService.numberFormat.getCustomFormatMetadata(format, true).precision : null,
@@ -395,10 +401,11 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             tooltip,
             value: dataValue.values[i],
             width: null,
-
         });
 
     }
+
+
     let overlapDataValueMax = Math.max.apply(Math, overlapDataValue);
     dataMax = <number> dataValue.maxLocal <= overlapDataValueMax ? overlapDataValueMax : dataValue.maxLocal;
 
@@ -431,7 +438,7 @@ function getDataValue(values, Index) {
         }
     }
     if (index !== -1) {
-        return values[index].values;
+        return values[index];
     } else {
         return [];
     }
@@ -1271,9 +1278,9 @@ export class BarChart implements IVisual {
         let tooltip = [];
 
         tooltip.push({
-            // header: value.category,
-            displayName: value.category,
-            value: value.formattedValue,
+            header: value.category,
+            //displayName: value.category,
+            //value: value.formattedValue,
         });
 
         value.tooltip.forEach((element) => {
