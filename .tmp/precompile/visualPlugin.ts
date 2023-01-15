@@ -5,9 +5,9 @@ import VisualConstructorOptions = powerbiVisualsApi.extensibility.visual.VisualC
 import DialogConstructorOptions = powerbiVisualsApi.extensibility.visual.DialogConstructorOptions;
 var powerbiKey: any = "powerbi";
 var powerbi: any = window[powerbiKey];
-var BarChartF5983CEA542C47889C9DE852B430DE5F_DEBUG: IVisualPlugin = {
-    name: 'BarChartF5983CEA542C47889C9DE852B430DE5F_DEBUG',
-    displayName: 'Horizontal Bar Chart',
+var BAC49510ab1d3fa4399887df4f629646fbf: IVisualPlugin = {
+    name: 'BAC49510ab1d3fa4399887df4f629646fbf',
+    displayName: 'Horizontal Bar Chart with Label',
     class: 'BarChart',
     apiVersion: '3.8.0',
     create: (options: VisualConstructorOptions) => {
@@ -27,6 +27,6 @@ var BarChartF5983CEA542C47889C9DE852B430DE5F_DEBUG: IVisualPlugin = {
 if (typeof powerbi !== "undefined") {
     powerbi.visuals = powerbi.visuals || {};
     powerbi.visuals.plugins = powerbi.visuals.plugins || {};
-    powerbi.visuals.plugins["BarChartF5983CEA542C47889C9DE852B430DE5F_DEBUG"] = BarChartF5983CEA542C47889C9DE852B430DE5F_DEBUG;
+    powerbi.visuals.plugins["BAC49510ab1d3fa4399887df4f629646fbf"] = BAC49510ab1d3fa4399887df4f629646fbf;
 }
-export default BarChartF5983CEA542C47889C9DE852B430DE5F_DEBUG;
+export default BAC49510ab1d3fa4399887df4f629646fbf;

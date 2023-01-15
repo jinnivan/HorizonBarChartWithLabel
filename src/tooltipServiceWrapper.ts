@@ -5,12 +5,10 @@ import {
     touches as d3Touches,
     ContainerElement,
 } from "d3-selection";
-
 import powerbi from "powerbi-visuals-api";
 import ISelectionId = powerbi.visuals.ISelectionId;
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import ITooltipService = powerbi.extensibility.ITooltipService;
-
 export interface ITooltipEventArgs<TData> {
     data: TData;
     coordinates: number[];

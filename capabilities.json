@@ -6,12 +6,12 @@
             "kind": "Grouping"
         },
         {
-            "displayName": "Measure",
+            "displayName": "Back Bar Value",
             "name": "measure",
             "kind": "Measure"
         },
         {
-            "displayName": "Overlap Values",
+            "displayName": "Front Bar Values",
             "name": "overlapValues",
             "kind": "Measure"
         },
@@ -314,6 +314,12 @@
                 },
                 "height": {
                     "displayName": "Min Height",
+                    "type": {
+                        "integer": true
+                    }
+                },
+                "bheight": {
+                    "displayName": "Bar Height (0=Auto)",
                     "type": {
                         "integer": true
                     }
