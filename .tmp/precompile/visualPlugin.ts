@@ -7,7 +7,7 @@ var powerbiKey: any = "powerbi";
 var powerbi: any = window[powerbiKey];
 var BAC49510ab1d3fa4399887df4f629646fbf: IVisualPlugin = {
     name: 'BAC49510ab1d3fa4399887df4f629646fbf',
-    displayName: 'Horizontal Bar Chart with Label',
+    displayName: 'Horizontal Bullet Chart with Label',
     class: 'BarChart',
     apiVersion: '3.8.0',
     create: (options: VisualConstructorOptions) => {

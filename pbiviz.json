@@ -1,13 +1,14 @@
 {
   "visual": {
     "name": "Bar Chart",
-    "displayName": "Horizontal Bar Chart with Label",
+    "displayName": "Horizontal Bullet Chart with Label",
     "guid": "BAC49510ab1d3fa4399887df4f629646fbf",
     "visualClassName": "BarChart",
     "version": "1.0.3",
-    "description": "A horizontal bar chart that saves space by putting the category labels inside the bars",
+    "description": "A horizontal Bullet chart that saves space by putting the category labels inside the bars",
     "supportUrl": "https://community.powerbi.com/t5/Custom-Visuals-Community/ct-p/CustomVisuals",
-    "gitHubUrl": "https://github.com/Microsoft/PowerBI-Visuals-HorizontalBarChart"
+    "gitHubUrl": "https://https://github.com/jinnivan/HorizonBarChartWithLabel",
+    "referencegitHubUrl": "https://github.com/Microsoft/PowerBI-Visuals-HorizontalBarChart"
   },
   "apiVersion": "3.8.0",
   "author": {
