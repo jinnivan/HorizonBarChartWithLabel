@@ -34,6 +34,7 @@ import {
 import { getCategoricalObjectValue, getValue } from "./objectEnumerationUtility";
 
 import ISelectionId = powerbi.visuals.ISelectionId;
+import { EnumType } from "typescript";
 
 /**
  * An interface for reporting rendering events
@@ -125,6 +126,7 @@ interface IBarChartSettings {
     fontParams: {
         show: boolean,
         fontSize: number,
+        fontFamily: string,
     };
     units: {
         tooltipUnits: number,
@@ -194,6 +196,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
         fontParams: {
             fontSize: 11,
             show: false,
+            fontFamily: "Segoe UI"
         },
         generalView: {
             barHeight: 30,
@@ -305,6 +308,8 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
                 defaultSettings.fontParams.fontSize),
             show: getValue<boolean> (objects, "fontParams", "show",
                 defaultSettings.fontParams.show),
+            fontFamily: getValue<string> (objects, "fontParams", "fontFamily",
+                defaultSettings.fontParams.fontFamily),
         },
         generalView: {
             barHeight: getValue<number> (objects, "generalView", "barHeight", defaultSettings.generalView.barHeight),
@@ -378,7 +383,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
         });
 
         textProperties = {
-            fontFamily: "Segoe UI",
+            fontFamily: IBarChartSettings.fontParams.fontFamily,
             fontSize: IBarChartSettings.fontParams.fontSize + "px",
             text: valueFormatterForCategories.format(category.values[i]),
         };
@@ -637,7 +642,9 @@ export class BarChart implements IVisual {
         if (fontSizeToUse > 40 && !this.IBarChartSettings.fontParams.show) {
             fontSizeToUse = 40;
         }
-
+        let fontFamilyToUse = this.IBarChartSettings.fontParams && this.IBarChartSettings.fontParams.show
+            ? this.IBarChartSettings.fontParams.fontFamily
+            : "Segoe UI";
         // Calculate label size to compute max bar size to use
         //  to leave room for label to be displayed inside the draw area for the .
         // Use the formatted value for the longest bar
@@ -646,30 +653,18 @@ export class BarChart implements IVisual {
             ? viewModel.dataPoints[indexForDataMax].formattedValue
             : "";
         let textProperties: ITextProperties = {
-            fontFamily: "sans-serif",
+            fontFamily: fontFamilyToUse,
             fontSize: fontSizeToUse + "px",
             text: formattedValue,
         };
 
-
-        let indexForLabelMax = getIndexForLabelMax(viewModel.dataPoints);
-        let LabelformattedValue = viewModel.dataPoints.length > 0
-        ? viewModel.dataPoints[indexForLabelMax].LabelformattedValue
-        : "";
-        let labelProperties: ITextProperties = {
-            fontFamily: "sans-serif",
-            fontSize: fontSizeToUse + "px",
-            text: LabelformattedValue,
-        }; 
-
-        
         // MAX Category Range ***********************************/
         let indexForCateMax = getIndexForCateMax(viewModel.dataPoints);
         let CateformattedValue = viewModel.dataPoints.length > 0
         ? viewModel.dataPoints[indexForCateMax].category
         : "";
         let CateProperties: ITextProperties = {
-            fontFamily: "sans-serif",
+            fontFamily: fontFamilyToUse,
             fontSize: fontSizeToUse + "px",
             text: CateformattedValue,
         }; 
@@ -678,7 +673,17 @@ export class BarChart implements IVisual {
             : 10 + BarChart.Config.xScalePadding + textMeasurementService.textMeasurementService.measureSvgTextWidth(CateProperties)
         ); 
   
-        let offset = textMeasurementService.textMeasurementService.measureSvgTextWidth(labelProperties);
+        // MAX Bar Label Range ***********************************/
+        let indexForLabelMax = getIndexForLabelMax(viewModel.dataPoints);
+        let LabelformattedValue = viewModel.dataPoints.length > 0
+        ? viewModel.dataPoints[indexForLabelMax].LabelformattedValue
+        : "";
+        let labelProperties: ITextProperties = {
+            fontFamily: fontFamilyToUse,
+            fontSize: fontSizeToUse + "px",
+            text: LabelformattedValue,
+        }; 
+        let offset = textMeasurementService.textMeasurementService.measureSvgTextWidth(labelProperties) + 20 ;
 
         let xScale = scaleLinear()
             .domain([0, viewModel.dataMax])
@@ -856,7 +861,7 @@ export class BarChart implements IVisual {
         }
 
         textProperties = {
-            fontFamily: "Segoe UI",
+            fontFamily: fontFamilyToUse,
             fontSize: fontSizeToUse + "px",
             text: "TEXT for calculating height",
         };
@@ -887,6 +892,7 @@ export class BarChart implements IVisual {
                 settings.barShape.shape === "Lollipop" ||
                 settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset - 10)
             .attr("font-size", fontSizeToUse)
+            .attr("font-family", fontFamilyToUse)
             .attr("fill", viewModel.settings.generalView.textColor.solid.color)
             .attr("width", (d) =>  CateOffset)
             .text((d) => d.category)
@@ -900,12 +906,11 @@ export class BarChart implements IVisual {
 
         texts.exit().remove();
 
-        ////////////////////////////////////////////////////////////////////// BarLabel 
+        ////////////////////////////////////////////////////////////////////// Bar Label 
         
         if (viewModel.settings.showBarLabels.show) {
 
             let valuesRect = bars.selectAll("rect.valuesRect").data((d) => [d]);
-            let valueRectWidth = 5 + textMeasurementService.textMeasurementService.measureSvgTextWidth(labelProperties);
 
             mergeElement = valuesRect
                 .enter()
@@ -915,15 +920,15 @@ export class BarChart implements IVisual {
             valuesRect
                 .merge(mergeElement)
                 .attr("x", (d) => viewModel.settings.alignBarLabels.show
-                    ? getTextPositionX( viewModel.dataMax, d.overlapValue , d.currTextWidth , CateOffset) - 2
-                    : getTextPositionX(d.value , d.overlapValue , d.currTextWidth , CateOffset) - 2)
+                    ? getTextPositionX( viewModel.dataMax, d.overlapValue , d.currTextWidth , CateOffset) + 6 
+                    : getTextPositionX(d.value , d.overlapValue , d.currTextWidth , CateOffset) + 6 )
                 .attr("y", (d) => getTextPositionY(d.category, labelProperties) - 3
                     / 4 * textMeasurementService.textMeasurementService.measureSvgTextHeight(labelProperties))
                 .attr("height", textMeasurementService.textMeasurementService.measureSvgTextHeight(labelProperties))
 
                 // width is adding 5 for padding around text 
                 // check null
-                .attr("width", (d) => (d.LabelformattedValue != null ? valueRectWidth : 0 ))
+                .attr("width", (d) => (d.LabelformattedValue != null ? offset : 0 ))
                 .attr("fill", viewModel.settings.showBarLabels.highlightColor.solid.color)
                 .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
                 .attr("rx", 2)
@@ -948,6 +953,7 @@ export class BarChart implements IVisual {
                         : offset +  getTextPositionX(d.value , d.overlapValue , d.currTextWidth , CateOffset);
                 })
                 .attr("font-size", fontSizeToUse)
+                .attr("font-family", fontFamilyToUse)
                 .attr("fill", viewModel.settings.showBarLabels.textColor.solid.color)
                 .text((d) => { return <string> d.LabelformattedValue; });
             textValues.exit().remove();
@@ -1108,6 +1114,7 @@ export class BarChart implements IVisual {
                 objectEnumeration.push({
                     objectName,
                     properties: {
+                        fontFamily: this.IBarChartSettings.fontParams.fontFamily,
                         fontSize: this.IBarChartSettings.fontParams.fontSize,
                         show: this.IBarChartSettings.fontParams.show,
                     },
