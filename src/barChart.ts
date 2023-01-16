@@ -937,14 +937,15 @@ export class BarChart implements IVisual {
             mergeElement = textValues
                 .enter()
                 .append<SVGElement> ("text")
-                .classed("bar-value", true);
+                .classed("bar-value", true)
+                .attr("text-anchor", "end");
 
             textValues.merge(mergeElement).attr("height", yHeight)
                 .attr("y", (d) => getTextPositionY(d.category, textProperties))
                 .attr("x", (d) => {
                     return viewModel.settings.alignBarLabels.show
-                        ?  getTextPositionX(viewModel.dataMax , d.overlapValue , d.currTextWidth , CateOffset)
-                        :  getTextPositionX(d.value , d.overlapValue , d.currTextWidth , CateOffset);
+                        ? offset +  getTextPositionX(viewModel.dataMax , d.overlapValue , d.currTextWidth , CateOffset)
+                        : offset +  getTextPositionX(d.value , d.overlapValue , d.currTextWidth , CateOffset);
                 })
                 .attr("font-size", fontSizeToUse)
                 .attr("fill", viewModel.settings.showBarLabels.textColor.solid.color)
