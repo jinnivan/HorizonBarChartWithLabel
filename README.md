@@ -1,4 +1,4 @@
-# Horizontal bar chart
+# Horizontal Bullet chart
 
 > A horizontal bullet chart with label that saves space by putting the category labels inside the bars
 
