@@ -2,7 +2,7 @@
   "visual": {
     "name": "Bar Chart",
     "displayName": "Horizontal Bullet Chart with Label",
-    "guid": "BAC49510ab1d3fa4399887df4f629646fbf",
+    "guid": "bac49510ab1d3fa4399887df4f629646fbf",
     "visualClassName": "BarChart",
     "version": "1.0.3",
     "description": "A horizontal Bullet chart that saves space by putting the category labels inside the bars",

@@ -5,8 +5,8 @@ import VisualConstructorOptions = powerbiVisualsApi.extensibility.visual.VisualC
 import DialogConstructorOptions = powerbiVisualsApi.extensibility.visual.DialogConstructorOptions;
 var powerbiKey: any = "powerbi";
 var powerbi: any = window[powerbiKey];
-var BAC49510ab1d3fa4399887df4f629646fbf: IVisualPlugin = {
-    name: 'BAC49510ab1d3fa4399887df4f629646fbf',
+var bac49510ab1d3fa4399887df4f629646fbf: IVisualPlugin = {
+    name: 'bac49510ab1d3fa4399887df4f629646fbf',
     displayName: 'Horizontal Bullet Chart with Label',
     class: 'BarChart',
     apiVersion: '3.8.0',
@@ -27,6 +27,6 @@ var BAC49510ab1d3fa4399887df4f629646fbf: IVisualPlugin = {
 if (typeof powerbi !== "undefined") {
     powerbi.visuals = powerbi.visuals || {};
     powerbi.visuals.plugins = powerbi.visuals.plugins || {};
-    powerbi.visuals.plugins["BAC49510ab1d3fa4399887df4f629646fbf"] = BAC49510ab1d3fa4399887df4f629646fbf;
+    powerbi.visuals.plugins["bac49510ab1d3fa4399887df4f629646fbf"] = bac49510ab1d3fa4399887df4f629646fbf;
 }
-export default BAC49510ab1d3fa4399887df4f629646fbf;
+export default bac49510ab1d3fa4399887df4f629646fbf;
