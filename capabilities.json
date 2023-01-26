@@ -365,6 +365,12 @@
                             }
                         }
                     }
+                },
+                "overlaplabel": {
+                    "displayName": "Overlap Label",
+                    "type":{
+                        "bool": true
+                    }
                 }
             }
         },

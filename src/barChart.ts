@@ -1,6 +1,7 @@
 import powerbi from "powerbi-visuals-api";
 import "./../style/visual.less";
 import { max, min } from "d3-array";
+import * as d3 from "d3";
 import { scaleBand, scaleLinear} from "d3-scale";
 import { BaseType, select, Selection } from  "d3-selection";
 import {
@@ -35,6 +36,7 @@ import { getCategoricalObjectValue, getValue } from "./objectEnumerationUtility"
 
 import ISelectionId = powerbi.visuals.ISelectionId;
 import { EnumType } from "typescript";
+import { isEmpty } from "powerbi-visuals-utils-svgutils/lib/shapes/shapes";
 
 /**
  * An interface for reporting rendering events
@@ -121,6 +123,7 @@ interface IBarChartSettings {
         barsColor: any,
         overlapColor: any,
         textColor: any,
+        overlaplabel: boolean,
 
     };
     fontParams: {
@@ -177,8 +180,8 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             show: false,
         },
         barHeight: {
-            height: 30,
-            bheight: 20,
+            height: 23,
+            bheight: 18,
             show: true,
         },
         barShape: {
@@ -205,6 +208,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             opacity: 100,
             overlapColor: { solid: { color: "#FEA19E" } },
             textColor: { solid: { color: "#000" } },
+            overlaplabel: true,
         },
         showBarLabels: {
             highlightColor: { solid: { color: "#000" } },
@@ -320,6 +324,8 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
                 defaultSettings.generalView.overlapColor),
             textColor: getValue<string> (objects, "generalView", "textColor",
                 defaultSettings.generalView.textColor),
+            overlaplabel: getValue<boolean> (objects, "generalView", "overlaplabel",
+                defaultSettings.generalView.overlaplabel),
         },
         showBarLabels: {
             highlightColor: getValue<string> (objects, "showBarLabels", "highlightColor",
@@ -396,7 +402,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             formattedOverlapValue: "",
             formattedValue: valueFormatterForCategories.format(dataValue.values[i]),
             overlapValue: overlapDataValue.length > 0 ? overlapDataValue[i] : null,
-            LabelformattedValue: LabelDataValue.length > 0 ? LabelDataValue[i] : null,
+            LabelformattedValue: LabelDataValue.length > 0 ? valueFormatterForCategories.format(LabelDataValue[i]) : null,
             precision: formattingService.numberFormat.isStandardFormat(format) === false ?
                 formattingService.numberFormat.getCustomFormatMetadata(format, true).precision : null,
             selected: false,
@@ -683,21 +689,22 @@ export class BarChart implements IVisual {
             fontSize: fontSizeToUse + "px",
             text: LabelformattedValue,
         }; 
-        let offset = textMeasurementService.textMeasurementService.measureSvgTextWidth(labelProperties) + 20 ;
+        let offset = textMeasurementService.textMeasurementService.measureSvgTextWidth(labelProperties) + 30 ;
+
 
         let xScale = scaleLinear()
             .domain([0, viewModel.dataMax])
-            .range([0, (viewModel.settings.showBarLabels.show ? width - offset - 
+            .range([0, (viewModel.settings.showBarLabels.show 
+                ? width - offset - 
                 ((settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
                 settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset)
-                - 15 : width - 
+                - 15 
+                : width - 
                 ((settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
                 settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset)
                 - 15) ]); // subtracting 40 for padding between the bar and the label
-            
-
 
         // empty rect to take full width for clickable area for clearing selection
 
@@ -723,6 +730,7 @@ export class BarChart implements IVisual {
             removeBars.selectAll("circle").remove();
             removeBars.selectAll("line").remove();
             removeBars.selectAll("text.bar-value").remove();
+            removeBars.selectAll("text.overlap-value").remove();
             removeBars.selectAll("text.bar-text").remove();
             removeBars.selectAll("rect.valuesRect").remove();
             removeBars.remove();
@@ -906,6 +914,41 @@ export class BarChart implements IVisual {
 
         texts.exit().remove();
 
+/////////////////////////////////////////////////////////////////////////////////
+if (viewModel.settings.generalView.overlaplabel === true ){
+    let textValues2 = bars
+    .selectAll("text.overlap-value").data((d) => [d]);
+
+    mergeElement = textValues2
+    .enter()
+    .append<SVGElement> ("text")
+    .classed("overlap-value", true)
+
+    textValues2.merge(mergeElement).attr("height", yHeight)
+    .attr("y", (d) => getTextPositionY(d.category, textProperties))
+    .attr("x", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10 
+        ? offset + xScale(<number> d.overlapValue) - 10 
+        : offset + xScale(<number> d.overlapValue);
+    })
+    .attr("text-anchor", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10   
+        ?"end"
+        :"start"; 
+    })
+    .attr("font-size", fontSizeToUse)
+    .attr("font-family", fontFamilyToUse) 
+    .attr("fill", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10   
+        ? viewModel.settings.generalView.barsColor.solid.color 
+        : viewModel.settings.generalView.overlapColor.solid.color; })
+    .text((d) => { return <string>  toFormat(d.overlapValue,".2f"); 
+    });
+
+    textValues2.exit().remove();
+} else {
+    let textValues2 = bars.selectAll("text.bar-value")
+    textValues2.remove()
+}
+/////////////////////////////////////////////////////////////////////////////////
+
         ////////////////////////////////////////////////////////////////////// Bar Label 
         
         if (viewModel.settings.showBarLabels.show) {
@@ -963,6 +1006,7 @@ export class BarChart implements IVisual {
             valuesRect.remove()
             textValues.remove()
         }
+
 
         this.tooltipServiceWrapper.addTooltip(this.barContainer.selectAll(".bar"),
             (tooltipEvent: ITooltipEventArgs<IBarChartDataPoint>) => this.getTooltipData(tooltipEvent.data),
@@ -1047,7 +1091,24 @@ export class BarChart implements IVisual {
                 }
             }
         }*/
+        function getWidth(value: PrimitiveValue){
+            let labelProperties: ITextProperties = {
+                fontFamily: fontFamilyToUse,
+                fontSize: fontSizeToUse + "px",
+                text: <string> value,
+            }; 
+            return textMeasurementService.textMeasurementService.measureSvgTextWidth(value);
+        }
 
+        function toFormat(value:PrimitiveValue,format: string ){
+            let result;
+            if (value === null){
+                result = ""
+            } else {
+                result = d3.format(format)(<number> value )
+            }
+            return result;
+        }
         function getTextPositionX(value: PrimitiveValue ,overlap: PrimitiveValue , wid: number, Offset: number) {
             if (settings.barShape.shape === "Bar") {
                 return  5 + Offset + (xScale(<number> overlap) > xScale(<number> value) || isNaN(xScale(<number> value)) ? xScale(<number> overlap) : xScale(<number> value) > 0 ?  xScale(<number> value) : 0 );
@@ -1129,6 +1190,7 @@ export class BarChart implements IVisual {
                         barsColor: this.IBarChartSettings.generalView.barsColor,
                         opacity: this.IBarChartSettings.generalView.opacity,
                         textColor: this.IBarChartSettings.generalView.textColor,
+                        overlaplabel: this.IBarChartSettings.generalView.overlaplabel,
                     },
                     selector: null,
                     validValues: {
@@ -1256,7 +1318,6 @@ export class BarChart implements IVisual {
             return currentSelectionId.includes(selectionId);
         });
     }
-
     private syncSelectionState(
         selection: Selection<BaseType, IBarChartDataPoint, BaseType, any>,
         selectionIds: ISelectionId[]): void {
