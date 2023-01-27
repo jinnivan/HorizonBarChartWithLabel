@@ -3,13 +3,18 @@ import "./../style/visual.less";
 import { max, min } from "d3-array";
 import * as d3 from "d3";
 import { scaleBand, scaleLinear} from "d3-scale";
-import { BaseType, select, Selection } from  "d3-selection";
 import {
     formattingService,
     IValueFormatter,
     textMeasurementService,
     TextProperties,
     valueFormatter } from "powerbi-visuals-utils-formattingutils";
+import {
+        event as d3Event,
+        select as d3Select,
+        BaseType, select, Selection 
+    } from "d3-selection";
+
 
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
@@ -1027,17 +1032,7 @@ if (viewModel.settings.generalView.overlaplabel === true ){
         );
 
         let selectionManager = this.selectionManager;
-        // this.svg.on("contextmenu", () => {
 
-        //     const mouseEvent: MouseEvent = event as MouseEvent;
-        //     const eventTarget: EventTarget = mouseEvent.target;
-        //     let dataPoint = select(eventTarget).datum();
-        //     selectionManager.showContextMenu(dataPoint ? dataPoint.selectionId : {}, {
-        //         x: mouseEvent.clientX,
-        //         y: mouseEvent.clientY
-        //     });
-        //     mouseEvent.preventDefault();
-        // });
 
         // This must be an anonymous function instead of a lambda because
         // d3 uses "this" as the reference to the element that was clicked.
@@ -1159,6 +1154,8 @@ if (viewModel.settings.generalView.overlaplabel === true ){
 
         this.events.renderingFinished(options);
     }
+    
+ 
 
     /**
      *  through the objects defined in the capabilities and adds the properties to the format pane

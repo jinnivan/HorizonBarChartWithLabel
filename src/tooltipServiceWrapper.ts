@@ -36,7 +36,7 @@ export function createTooltipServiceWrapper(
 }
 
 class TooltipServiceWrapper implements ITooltipServiceWrapper {
-    private handleTouchTimeoutId: number;
+    private handleTouchTimeoutId: number| ReturnType<typeof setTimeout> = null;
     private visualHostTooltipService: ITooltipService;
     private rootElement: ContainerElement;
     private handleTouchDelay: number;
