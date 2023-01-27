@@ -6,7 +6,7 @@
             "kind": "Grouping"
         },
         {
-            "displayName": "Back Bar Value",
+            "displayName": "Back Bar Values",
             "name": "measure",
             "kind": "Measure"
         },
@@ -16,7 +16,7 @@
             "kind": "Measure"
         },
         {
-            "displayName": "Label Values",
+            "displayName": "Second Label Values",
             "name": "LabelValues",
             "kind": "Measure"
         },
@@ -261,8 +261,49 @@
                 }
             }
         },
+        "generalView": {
+            "displayName": "Bar Settings",
+            "properties": {
+                "opacity": {
+                    "displayName": "Opacity",
+                    "type": {
+                        "integer": true
+                    }
+                },
+                "barsColor": {
+                    "displayName": "Back Bars Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "overlapColor": {
+                    "displayName": "Front Bars Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "textColor": {
+                    "displayName": "Category Text Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "experimental": {
-            "displayName": "Blend(Experimental)",
+            "displayName": "Bar Label",
             "properties": {
                 "show": {
                     "displayName": "Show",
@@ -271,7 +312,7 @@
                     }
                 },
                 "blendMode": {
-                    "displayName": "Mode",
+                    "displayName": "Color Mode",
                     "type": {
                         "enumeration": [
                             {
@@ -323,95 +364,6 @@
                                 "value": "initial"
                             }
                         ]
-                    }
-                }
-            }
-        },
-        "generalView": {
-            "displayName": "Bar Settings",
-            "properties": {
-                "opacity": {
-                    "displayName": "Opacity",
-                    "type": {
-                        "integer": true
-                    }
-                },
-                "barsColor": {
-                    "displayName": "Back Bars Color",
-                    "type": {
-                        "fill": {
-                            "solid": {
-                                "color": true
-                            }
-                        }
-                    }
-                },
-                "overlapColor": {
-                    "displayName": "Front Bars Color",
-                    "type": {
-                        "fill": {
-                            "solid": {
-                                "color": true
-                            }
-                        }
-                    }
-                },
-                "textColor": {
-                    "displayName": "Text Color",
-                    "type": {
-                        "fill": {
-                            "solid": {
-                                "color": true
-                            }
-                        }
-                    }
-                },
-                "overlaplabel": {
-                    "displayName": "Overlap Label",
-                    "type":{
-                        "bool": true
-                    }
-                }
-            }
-        },
-        "showBarLabels": {
-            "displayName": "Bar Labels",
-            "properties": {
-                "show": {
-                    "displayName": "Show",
-                    "type": {
-                        "bool": true
-                    }
-                },
-                "textColor": {
-                    "displayName": "Text Color",
-                    "type": {
-                        "fill": {
-                            "solid": {
-                                "color": true
-                            }
-                        }
-                    }
-                },
-                "highlightColor": {
-                    "displayName": "Highlight Color",
-                    "type": {
-                        "fill": {
-                            "solid": {
-                                "color": true
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "alignBarLabels": {
-            "displayName": "Align Right",
-            "properties": {
-                "show": {
-                    "displayName": "Show",
-                    "type": {
-                        "bool": true
                     }
                 }
             }
@@ -488,6 +440,42 @@
                                 "color": true
                             }
                         }
+                    }
+                }
+            }
+        },
+        "showBarLabels": {
+            "displayName": "Second Label",
+            "properties": {
+                "show": {
+                    "displayName": "Show",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "textColor": {
+                    "displayName": "Text Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "highlightColor": {
+                    "displayName": "Highlight Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },"alignBarLabels": {
+                    "displayName": "Align Right",
+                    "type": {
+                        "bool": true
                     }
                 }
             }

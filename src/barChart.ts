@@ -128,7 +128,6 @@ interface IBarChartSettings {
         barsColor: any,
         overlapColor: any,
         textColor: any,
-        overlaplabel: boolean,
 
     };
     fontParams: {
@@ -144,9 +143,7 @@ interface IBarChartSettings {
         show: boolean,
         textColor: any,
         highlightColor: any,
-    };
-    alignBarLabels: {
-        show: boolean,
+        alignBarLabels: boolean,
     };
     barShape: {
         shape: string,
@@ -180,10 +177,6 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
     let dataViews = options.dataViews;
 
     let defaultSettings: IBarChartSettings = {
-
-        alignBarLabels: {
-            show: false,
-        },
         barHeight: {
             height: 23,
             bheight: 18,
@@ -213,12 +206,12 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             opacity: 100,
             overlapColor: { solid: { color: "#FEA19E" } },
             textColor: { solid: { color: "#000" } },
-            overlaplabel: true,
         },
         showBarLabels: {
             highlightColor: { solid: { color: "#000" } },
             show: true,
             textColor: { solid: { color: "#FFF" } },
+            alignBarLabels: true
         },
         units: {
             decimalPlaces: null,
@@ -282,10 +275,6 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
     let textProperties: ITextProperties;
 
     let IBarChartSettings: IBarChartSettings = {
-        alignBarLabels: {
-            show: getValue<boolean> (objects, "alignBarLabels", "show",
-                defaultSettings.alignBarLabels.show),
-        },
         barHeight: {
             height: getValue<number> (objects, "barHeight", "height",
                 defaultSettings.barHeight.height),
@@ -329,8 +318,6 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
                 defaultSettings.generalView.overlapColor),
             textColor: getValue<string> (objects, "generalView", "textColor",
                 defaultSettings.generalView.textColor),
-            overlaplabel: getValue<boolean> (objects, "generalView", "overlaplabel",
-                defaultSettings.generalView.overlaplabel),
         },
         showBarLabels: {
             highlightColor: getValue<string> (objects, "showBarLabels", "highlightColor",
@@ -339,6 +326,8 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             defaultSettings.showBarLabels.show),
             textColor: getValue<string> (objects, "showBarLabels", "textColor",
             defaultSettings.showBarLabels.textColor),
+            alignBarLabels: getValue<boolean> (objects, "showBarLabels", "alignBarLabels",
+            defaultSettings.showBarLabels.alignBarLabels),
         },
         units: {
             decimalPlaces: getValue<number> (objects, "units", "decimalPlaces",
@@ -911,50 +900,51 @@ export class BarChart implements IVisual {
             .text((d) => d.category)
             
             //.each((d) => d.width = xScale(<number> d.value));
-        if (this.IBarChartSettings.experimental.show) {
+       /* if (this.IBarChartSettings.experimental.show) {
             texts.attr("style", "mix-blend-mode: " + this.IBarChartSettings.experimental.blendMode);
         } else {
             texts.attr("style", "mix-blend-mode: initial");
-        }
+        } */
 
         texts.exit().remove();
 
 /////////////////////////////////////////////////////////////////////////////////
-if (viewModel.settings.generalView.overlaplabel === true ){
-    let textValues2 = bars
-    .selectAll("text.overlap-value").data((d) => [d]);
 
-    mergeElement = textValues2
-    .enter()
-    .append<SVGElement> ("text")
-    .classed("overlap-value", true)
+if (viewModel.settings.experimental.show){
+        let textValues2 = bars
+        .selectAll("text.overlap-value").data((d) => [d]);
 
-    textValues2.merge(mergeElement).attr("height", yHeight)
-    .attr("y", (d) => getTextPositionY(d.category, textProperties))
-    .attr("x", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10 
-        ? offset + xScale(<number> d.overlapValue) - 10 
-        : offset + xScale(<number> d.overlapValue);
-    })
-    .attr("text-anchor", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10   
-        ?"end"
-        :"start"; 
-    })
-    .attr("font-size", fontSizeToUse)
-    .attr("font-family", fontFamilyToUse) 
-    .attr("fill", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10   
-        ? viewModel.settings.generalView.barsColor.solid.color 
-        : viewModel.settings.generalView.overlapColor.solid.color; })
-    .text((d) => { return <string>  toFormat(d.overlapValue,".2f"); 
-    });
+        mergeElement = textValues2
+        .enter()
+        .append<SVGElement> ("text")
+        .classed("overlap-value", true)
 
-    textValues2.exit().remove();
-} else {
-    let textValues2 = bars.selectAll("text.bar-value")
-    textValues2.remove()
-}
-/////////////////////////////////////////////////////////////////////////////////
+        textValues2.merge(mergeElement).attr("height", yHeight)
+        .attr("y", (d) => getTextPositionY(d.category, textProperties))
+        .attr("x", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10 
+            ? CateOffset + xScale(<number> d.overlapValue) - 5 
+            : CateOffset + xScale(<number> d.overlapValue) + 5;
+        })
+        .attr("text-anchor", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10   
+            ?"end"
+            :"start"; 
+        })
+        .attr("font-size", fontSizeToUse)
+        .attr("font-family", fontFamilyToUse) 
+        .attr("style", "mix-blend-mode: " + this.IBarChartSettings.experimental.blendMode)
+        .attr("fill", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10   
+            ? viewModel.settings.generalView.barsColor.solid.color 
+            : viewModel.settings.generalView.overlapColor.solid.color; })
+        .text((d) => { return <string>  toFormat(d.overlapValue,".2f"); 
+        });
 
-        ////////////////////////////////////////////////////////////////////// Bar Label 
+        textValues2.exit().remove();
+    } else {
+        let textValues2 = bars.selectAll("text.overlap-value")
+        textValues2.remove()
+    }
+
+////////////////////////////////////////////////////////////////////// Bar Label 
         
         if (viewModel.settings.showBarLabels.show) {
 
@@ -967,7 +957,7 @@ if (viewModel.settings.generalView.overlaplabel === true ){
 
             valuesRect
                 .merge(mergeElement)
-                .attr("x", (d) => viewModel.settings.alignBarLabels.show
+                .attr("x", (d) => viewModel.settings.showBarLabels.alignBarLabels === true
                     ? getTextPositionX( viewModel.dataMax, d.overlapValue , d.currTextWidth , CateOffset) + 6 
                     : getTextPositionX(d.value , d.overlapValue , d.currTextWidth , CateOffset) + 6 )
                 .attr("y", (d) => getTextPositionY(d.category, labelProperties) - 3
@@ -991,18 +981,21 @@ if (viewModel.settings.generalView.overlaplabel === true ){
                 .enter()
                 .append<SVGElement> ("text")
                 .classed("bar-value", true)
-                .attr("text-anchor", "end");
 
             textValues.merge(mergeElement).attr("height", yHeight)
                 .attr("y", (d) => getTextPositionY(d.category, textProperties))
                 .attr("x", (d) => {
-                    return viewModel.settings.alignBarLabels.show
+                    return viewModel.settings.showBarLabels.alignBarLabels === true
                         ? offset +  getTextPositionX(viewModel.dataMax , d.overlapValue , d.currTextWidth , CateOffset)
-                        : offset +  getTextPositionX(d.value , d.overlapValue , d.currTextWidth , CateOffset);
+                        :  getTextPositionX(d.value , d.overlapValue , d.currTextWidth , CateOffset);
                 })
                 .attr("font-size", fontSizeToUse)
                 .attr("font-family", fontFamilyToUse)
                 .attr("fill", viewModel.settings.showBarLabels.textColor.solid.color)
+                .attr("text-anchor", (d) => { return  viewModel.settings.showBarLabels.alignBarLabels === true   
+                    ?"end"
+                    :"start"; 
+                })
                 .text((d) => { return <string> d.LabelformattedValue; });
             textValues.exit().remove();
         } else {
@@ -1012,6 +1005,7 @@ if (viewModel.settings.generalView.overlaplabel === true ){
             textValues.remove()
         }
 
+/////////////////////////////////////////////////////////////////////////////////
 
         this.tooltipServiceWrapper.addTooltip(this.barContainer.selectAll(".bar"),
             (tooltipEvent: ITooltipEventArgs<IBarChartDataPoint>) => this.getTooltipData(tooltipEvent.data),
@@ -1111,7 +1105,7 @@ if (viewModel.settings.generalView.overlaplabel === true ){
                 settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
                 settings.barShape.shape === "Hammer Head") {
-                if (viewModel.settings.alignBarLabels.show) {
+                if (viewModel.settings.showBarLabels.alignBarLabels === true) {
                     return 1.01 * (xScale(<number> value) + 8);
                 }
                 if (settings.barShape.labelPosition === "Top") {
@@ -1187,7 +1181,6 @@ if (viewModel.settings.generalView.overlaplabel === true ){
                         barsColor: this.IBarChartSettings.generalView.barsColor,
                         opacity: this.IBarChartSettings.generalView.opacity,
                         textColor: this.IBarChartSettings.generalView.textColor,
-                        overlaplabel: this.IBarChartSettings.generalView.overlaplabel,
                     },
                     selector: null,
                     validValues: {
@@ -1219,15 +1212,7 @@ if (viewModel.settings.generalView.overlaplabel === true ){
                         highlightColor: this.IBarChartSettings.showBarLabels.highlightColor,
                         show: this.IBarChartSettings.showBarLabels.show,
                         textColor: this.IBarChartSettings.showBarLabels.textColor,
-                    },
-                    selector: null,
-                });
-                break;
-            case "alignBarLabels":
-                objectEnumeration.push({
-                    objectName,
-                    properties: {
-                        show: this.IBarChartSettings.alignBarLabels.show,
+                        alignBarLabels: this.IBarChartSettings.showBarLabels.alignBarLabels,
                     },
                     selector: null,
                 });
