@@ -157,7 +157,9 @@ interface IBarChartSettings {
     };
     experimental: {
         show: boolean,
-        blendMode: string,
+        InnerbarsLabel: any,
+        OuterbarsLabel: any,
+        //blendMode: string,
     };
     clearFilters: {
         show: boolean,
@@ -191,7 +193,9 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             show: false,
         },
         experimental: {
-            blendMode: "difference",
+            //blendMode: "difference",
+            InnerbarsLabel: { solid: { color: "#744EC2" } },
+            OuterbarsLabel: { solid: { color: "#FEA19E" } },
             show: false,
         },
         fontParams: {
@@ -201,7 +205,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
         },
         generalView: {
             barHeight: 30,
-            barsColor: { solid: { color: "turquoise" } },
+            barsColor: { solid: { color: "#744EC2" } },
             minHeight: 250,
             opacity: 100,
             overlapColor: { solid: { color: "#FEA19E" } },
@@ -296,8 +300,12 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
                 defaultSettings.clearFilters.show),
         },
         experimental: {
-            blendMode: getValue<string> (objects, "experimental", "blendMode",
-                defaultSettings.experimental.blendMode),
+            //blendMode: getValue<string> (objects, "experimental", "blendMode",
+            //    defaultSettings.experimental.blendMode),
+            InnerbarsLabel: getValue<string> (objects, "experimental", "InnerbarsLabel",
+                defaultSettings.experimental.InnerbarsLabel),
+            OuterbarsLabel: getValue<string> (objects, "experimental", "OuterbarsLabel",
+                defaultSettings.experimental.OuterbarsLabel),
             show: getValue<boolean> (objects, "experimental", "show",
                 defaultSettings.experimental.show),
         },
@@ -931,10 +939,10 @@ if (viewModel.settings.experimental.show){
         })
         .attr("font-size", fontSizeToUse)
         .attr("font-family", fontFamilyToUse) 
-        .attr("style", "mix-blend-mode: " + this.IBarChartSettings.experimental.blendMode)
+        //.attr("style", "mix-blend-mode: " + this.IBarChartSettings.experimental.blendMode)
         .attr("fill", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10   
-            ? viewModel.settings.generalView.barsColor.solid.color 
-            : viewModel.settings.generalView.overlapColor.solid.color; })
+            ? viewModel.settings.experimental.InnerbarsLabel.solid.color 
+            : viewModel.settings.experimental.OuterbarsLabel.solid.color; })
         .text((d) => { return <string>  toFormat(d.overlapValue,".2f"); 
         });
 
@@ -1217,7 +1225,7 @@ if (viewModel.settings.experimental.show){
                     selector: null,
                 });
                 break;
-            case "barShape":
+            /* case "barShape":
                 objectEnumeration.push({
                     objectName,
                     properties: {
@@ -1227,7 +1235,7 @@ if (viewModel.settings.experimental.show){
                     },
                     selector: null,
                 });
-                break;
+                break; */
             case "barHeight":
                 objectEnumeration.push({
                     objectName,
@@ -1258,7 +1266,9 @@ if (viewModel.settings.experimental.show){
                 objectEnumeration.push({
                     objectName,
                     properties: {
-                        blendMode: this.IBarChartSettings.experimental.blendMode,
+                        //blendMode: this.IBarChartSettings.experimental.blendMode,
+                        InnerbarsLabel: this.IBarChartSettings.experimental.InnerbarsLabel,
+                        OuterbarsLabel: this.IBarChartSettings.experimental.OuterbarsLabel,
                         show: this.IBarChartSettings.experimental.show,
                     },
 

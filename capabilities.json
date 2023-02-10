@@ -311,59 +311,24 @@
                         "bool": true
                     }
                 },
-                "blendMode": {
-                    "displayName": "Color Mode",
+                "InnerbarsLabel": {
+                    "displayName": "Inner Label Color",
                     "type": {
-                        "enumeration": [
-                            {
-                                "displayName": "multiply",
-                                "value": "multiply"
-                            },
-                            {
-                                "displayName": "screen",
-                                "value": "screen"
-                            },
-                            {
-                                "displayName": "overlay",
-                                "value": "overlay"
-                            },
-                            {
-                                "displayName": "darken",
-                                "value": "darken"
-                            },
-                            {
-                                "displayName": "lighten",
-                                "value": "lighten"
-                            },
-                            {
-                                "displayName": "difference",
-                                "value": "difference"
-                            },
-                            {
-                                "displayName": "exclusion",
-                                "value": "exclusion"
-                            },
-                            {
-                                "displayName": "hue",
-                                "value": "hue"
-                            },
-                            {
-                                "displayName": "saturation",
-                                "value": "saturation"
-                            },
-                            {
-                                "displayName": "color",
-                                "value": "color"
-                            },
-                            {
-                                "displayName": "luminosity",
-                                "value": "luminosity"
-                            },
-                            {
-                                "displayName": "initial",
-                                "value": "initial"
+                        "fill": {
+                            "solid": {
+                                "color": true
                             }
-                        ]
+                        }
+                    }
+                },
+                "OuterbarsLabel": {
+                    "displayName": "Outer Label Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
                     }
                 }
             }
