@@ -3,12 +3,13 @@ import "./../style/visual.less";
 import { max, min } from "d3-array";
 import * as d3 from "d3";
 import { scaleBand, scaleLinear} from "d3-scale";
-import {
-    formattingService,
-    IValueFormatter,
-    textMeasurementService,
-    TextProperties,
-    valueFormatter } from "powerbi-visuals-utils-formattingutils";
+
+import { textMeasurementService, valueFormatter } from "powerbi-visuals-utils-formattingutils";
+import IValueFormatter = valueFormatter.IValueFormatter;
+
+import { formattingService } from "powerbi-visuals-utils-formattingutils";
+import { TextProperties } from "powerbi-visuals-utils-formattingutils/lib/src/interfaces";
+
 import {
         event as d3Event,
         select as d3Select,
@@ -29,6 +30,16 @@ import IColorPalette = powerbi.extensibility.IColorPalette;
 import PrimitiveValue = powerbi.PrimitiveValue;
 import Fill = powerbi.Fill;
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
+
+import {
+    legend as Legend,
+    legendInterfaces as LI
+} from "powerbi-visuals-utils-chartutils";
+import createLegend = Legend.createLegend;
+import ILegend = LI.ILegend;
+import LegendData = LI.LegendData;
+import MarkerShape = LI.MarkerShape;
+import LegendPosition = LI.LegendPosition;
 
 import {
     createTooltipServiceWrapper,
@@ -262,8 +273,8 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
 
     const tooltipData = categorical.values.slice(0, categorical.values.length); //loop tooltip index
 
-    let valueFormatterForCategories: IValueFormatter = valueFormatter.valueFormatter.create({
-        format: valueFormatter.valueFormatter.getFormatStringByColumn(category.source),
+    let valueFormatterForCategories: IValueFormatter = valueFormatter.create({
+        format: valueFormatter.getFormatStringByColumn(category.source),
         value: dataValue,
         value2: categorical.values[categorical.values.length - 1],
     });
@@ -355,8 +366,8 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             },
         };
 
-        valueFormatterForCategories = valueFormatter.valueFormatter.create({
-            format: valueFormatter.valueFormatter.getFormatStringByColumn(metadata.columns[i]),
+        valueFormatterForCategories = valueFormatter.create({
+            format: valueFormatter.getFormatStringByColumn(metadata.columns[i]),
             value: dataValue,
             value2: categorical.values[categorical.values.length - 1],
         });
@@ -369,8 +380,8 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
 
             index = getMetadataIndexFor(tooltipDataItem.source.displayName, metadata.columns);
 
-            valueFormatterForCategories = valueFormatter.valueFormatter.create({
-                format: valueFormatter.valueFormatter.getFormatStringByColumn(metadata.columns[index]),
+            valueFormatterForCategories = valueFormatter.create({
+                format: valueFormatter.getFormatStringByColumn(metadata.columns[index]),
                 value: dataValue,
                 value2: categorical.values[categorical.values.length - 1],
             });
@@ -380,11 +391,11 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             });
         }
 
-        const format = valueFormatter.valueFormatter.getFormatStringByColumn(
+        const format = valueFormatter.getFormatStringByColumn(
             metadata.columns[getMetadataIndexFor(
                 categorical.values[0].source.displayName, metadata.columns)]);
 
-        valueFormatterForCategories = valueFormatter.valueFormatter.create({
+        valueFormatterForCategories = valueFormatter.create({
             format,
             value: dataValue,
             value2: categorical.values[categorical.values.length - 1],
@@ -395,7 +406,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             fontSize: IBarChartSettings.fontParams.fontSize + "px",
             text: valueFormatterForCategories.format(category.values[i]),
         };
-        currTextWidth = textMeasurementService.textMeasurementService.measureSvgTextWidth(textProperties);
+        currTextWidth = textMeasurementService.measureSvgTextWidth(textProperties);
 
         IBarChartDataPoints.push({
             category: category.values[i] + "",
@@ -678,9 +689,9 @@ export class BarChart implements IVisual {
             fontSize: fontSizeToUse + "px",
             text: CateformattedValue,
         }; 
-        const CateOffset = (yHeight > 10 + BarChart.Config.xScalePadding + textMeasurementService.textMeasurementService.measureSvgTextWidth(CateProperties) 
+        const CateOffset = (yHeight > 10 + BarChart.Config.xScalePadding + textMeasurementService.measureSvgTextWidth(CateProperties) 
             ? yHeight/2 
-            : 10 + BarChart.Config.xScalePadding + textMeasurementService.textMeasurementService.measureSvgTextWidth(CateProperties)
+            : 10 + BarChart.Config.xScalePadding + textMeasurementService.measureSvgTextWidth(CateProperties)
         ); 
   
         // MAX Bar Label Range ***********************************/
@@ -693,7 +704,7 @@ export class BarChart implements IVisual {
             fontSize: fontSizeToUse + "px",
             text: LabelformattedValue,
         }; 
-        const offset = textMeasurementService.textMeasurementService.measureSvgTextWidth(labelProperties) + 30 ;
+        const offset = textMeasurementService.measureSvgTextWidth(labelProperties) + 30 ;
 
 
         const xScale = scaleLinear()
@@ -841,7 +852,7 @@ export class BarChart implements IVisual {
                 .merge(mergeElement)
                 .attr("cx", (d) => getHeadPositionX(d.value, d.width) - 2 - yHeight / 8)
                 .attr("cy", (d) => yScale(d.category) + yHeight / 16)
-                // - textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4,
+                // - textMeasurementService.measureSvgTextHeight(textProperties) / 4,
                 .attr("r", yHeight / 8)
                 .attr("fill", viewModel.settings.barShape.headColor.solid.color)
                 .attr("fill-opacity", viewModel.settings.generalView.opacity / 100);
@@ -861,9 +872,9 @@ export class BarChart implements IVisual {
                 .attr("x1", (d) => getHeadPositionX(d.value, d.width) - 7 - yHeight / 32)
                 .attr("x2", (d) => getHeadPositionX(d.value, d.width) - 7 - yHeight / 32)
                 .attr("y1", (d) => yScale(d.category) - yHeight / 16)
-                // - textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4,
+                // - textMeasurementService.measureSvgTextHeight(textProperties) / 4,
                 .attr("y2", (d) => yScale(d.category) + yHeight / 16 + yHeight / 8)
-                // - textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4,
+                // - textMeasurementService.measureSvgTextHeight(textProperties) / 4,
                 .attr("stroke-width", yHeight / 16)
                 .attr("stroke", viewModel.settings.barShape.headColor.solid.color)
                 .attr("stroke-opacity", viewModel.settings.generalView.opacity / 100);
@@ -899,7 +910,7 @@ export class BarChart implements IVisual {
 
         texts.merge(mergeElement)
             .attr("height", yHeight)
-            .attr("y", (d) => yScale(d.category) + yHeight / 2 + textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4)
+            .attr("y", (d) => yScale(d.category) + yHeight / 2 + textMeasurementService.measureSvgTextHeight(textProperties) / 4)
             .attr("x", (d) => (settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
                 settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset - 10)
@@ -974,8 +985,8 @@ if (viewModel.settings.experimental.show){
                 ? getTextPositionX( viewModel.dataMax, d.overlapValue , d.currTextWidth , CateOffset) + 6 
                 : getTextPositionX(d.value , d.overlapValue , d.currTextWidth , CateOffset) + 6 )
             .attr("y", (d) => getTextPositionY(d.category, labelProperties) - 3
-                / 4 * textMeasurementService.textMeasurementService.measureSvgTextHeight(labelProperties))
-            .attr("height", textMeasurementService.textMeasurementService.measureSvgTextHeight(labelProperties))
+                / 4 * textMeasurementService.measureSvgTextHeight(labelProperties))
+            .attr("height", textMeasurementService.measureSvgTextHeight(labelProperties))
 
             // width is adding 5 for padding around text 
             // check null
@@ -1100,7 +1111,7 @@ if (viewModel.settings.experimental.show){
             fontSize: fontSizeToUse + "px",
             text: <string> value,
         }; 
-        return textMeasurementService.textMeasurementService.measureSvgTextWidth(value);
+        return textMeasurementService.measureSvgTextWidth(labelProperties);
     }
 
     function toFormat(value:PrimitiveValue,format: string ){
@@ -1133,18 +1144,18 @@ if (viewModel.settings.experimental.show){
     function getTextPositionY(category: string, textProps: TextProperties) {
         if (settings.barShape.shape === "Bar") {
             return yScale(category) + yHeight / 2 +
-                textMeasurementService.textMeasurementService.measureSvgTextHeight(textProps) / 4;
+                textMeasurementService.measureSvgTextHeight(textProps) / 4;
         } else if (settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
                 settings.barShape.shape === "Hammer Head") {
             if (settings.barShape.labelPosition === "Top") {
                 return yScale(category) +
                 yHeight / 16 +
-                textMeasurementService.textMeasurementService.measureSvgTextHeight(textProps) / 4;
+                textMeasurementService.measureSvgTextHeight(textProps) / 4;
             } else {
                 return yScale(category) +
                 yHeight / 2 +
-                textMeasurementService.textMeasurementService.measureSvgTextHeight(textProps) / 4;
+                textMeasurementService.measureSvgTextHeight(textProps) / 4;
             }
         }
     }
