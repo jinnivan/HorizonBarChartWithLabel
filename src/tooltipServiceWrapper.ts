@@ -26,28 +26,28 @@ export interface ITooltipServiceWrapper {
     hide(): void;
 }
 
-const DefaultHandleTouchDelay = 1000;
+const DefaultHandconstouchDelay = 1000;
 
 export function createTooltipServiceWrapper(
     tooltipService: ITooltipService,
     rootElement: ContainerElement,
-    handleTouchDelay: number = DefaultHandleTouchDelay): ITooltipServiceWrapper {
-    return new TooltipServiceWrapper(tooltipService, rootElement, handleTouchDelay);
+    handconstouchDelay: number = DefaultHandconstouchDelay): ITooltipServiceWrapper {
+    return new TooltipServiceWrapper(tooltipService, rootElement, handconstouchDelay);
 }
 
 class TooltipServiceWrapper implements ITooltipServiceWrapper {
-    private handleTouchTimeoutId: number| ReturnType<typeof setTimeout> = null;
+    private handconstouchTimeoutId: number| ReturnType<typeof setTimeout> = null;
     private visualHostTooltipService: ITooltipService;
     private rootElement: ContainerElement;
-    private handleTouchDelay: number;
+    private handconstouchDelay: number;
 
-    constructor(tooltipService: ITooltipService, rootElement: ContainerElement, handleTouchDelay: number) {
+    constructor(tooltipService: ITooltipService, rootElement: ContainerElement, handconstouchDelay: number) {
         this.visualHostTooltipService = tooltipService;
-        this.handleTouchDelay = handleTouchDelay;
+        this.handconstouchDelay = handconstouchDelay;
         this.rootElement = rootElement;
     }
     private static touchStartEventName(): string {
-        let eventName: string = "touchstart";
+        let eventName = "touchstart";
 
         if (window["PointerEvent"]) {
             // IE11
@@ -58,7 +58,7 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
     }
 
     private static touchMoveEventName(): string {
-        let eventName: string = "touchmove";
+        let eventName = "touchmove";
 
         if (window["PointerEvent"]) {
             // IE11
@@ -69,7 +69,7 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
     }
 
     private static touchEndEventName(): string {
-        let eventName: string = "touchend";
+        let eventName = "touchend";
 
         if (window["PointerEvent"]) {
             // IE11
@@ -80,7 +80,7 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
     }
 
     private static usePointerEvents(): boolean {
-        let eventName = TooltipServiceWrapper.touchStartEventName();
+        const eventName = TooltipServiceWrapper.touchStartEventName();
         return eventName === "pointerdown" || eventName === "MSPointerDown";
     }
 
@@ -94,7 +94,7 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
             return;
         }
 
-        let rootNode = this.rootElement;
+        const rootNode = this.rootElement;
 
         // Mouse events
         selection.on("mouseover.tooltip", () => {
@@ -103,16 +103,16 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
                 return;
             }
 
-            let tooltipEventArgs = this.makeTooltipEventArgs<T>(rootNode, true, false);
+            const tooltipEventArgs = this.makeTooltipEventArgs<T>(rootNode, true, false);
             if (!tooltipEventArgs) {
                 return;
             }
-            let tooltipInfo = getTooltipInfoDelegate(tooltipEventArgs);
+            const tooltipInfo = getTooltipInfoDelegate(tooltipEventArgs);
             if (tooltipInfo == null) {
                 return;
             }
 
-            let selectionId = getDataPointIdentity(tooltipEventArgs);
+            const selectionId = getDataPointIdentity(tooltipEventArgs);
 
             this.visualHostTooltipService.show({
                 coordinates: tooltipEventArgs.coordinates,
@@ -135,7 +135,7 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
                 return;
             }
 
-            let tooltipEventArgs = this.makeTooltipEventArgs<T>(rootNode, true, false);
+            const tooltipEventArgs = this.makeTooltipEventArgs<T>(rootNode, true, false);
             if (!tooltipEventArgs) {
                 return;
             }
@@ -148,7 +148,7 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
                 }
             }
 
-            let selectionId = getDataPointIdentity(tooltipEventArgs);
+            const selectionId = getDataPointIdentity(tooltipEventArgs);
 
             this.visualHostTooltipService.move({
                 coordinates: tooltipEventArgs.coordinates,
@@ -160,9 +160,9 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
 
         // --- Touch events ---
 
-        let touchStartEventName: string = TooltipServiceWrapper.touchStartEventName();
-        let touchEndEventName: string = TooltipServiceWrapper.touchEndEventName();
-        let isPointerEvent: boolean = TooltipServiceWrapper.usePointerEvents();
+        const touchStartEventName: string = TooltipServiceWrapper.touchStartEventName();
+        const touchEndEventName: string = TooltipServiceWrapper.touchEndEventName();
+        const isPointerEvent: boolean = TooltipServiceWrapper.usePointerEvents();
 
         selection.on(touchStartEventName + ".tooltip", () => {
             this.visualHostTooltipService.hide({
@@ -170,13 +170,13 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
                 immediately: true,
             });
 
-            let tooltipEventArgs = this.makeTooltipEventArgs<T>(rootNode, isPointerEvent, true);
+            const tooltipEventArgs = this.makeTooltipEventArgs<T>(rootNode, isPointerEvent, true);
             if (!tooltipEventArgs) {
                 return;
             }
 
-            let tooltipInfo = getTooltipInfoDelegate(tooltipEventArgs);
-            let selectionId = getDataPointIdentity(tooltipEventArgs);
+            const tooltipInfo = getTooltipInfoDelegate(tooltipEventArgs);
+            const selectionId = getDataPointIdentity(tooltipEventArgs);
 
             this.visualHostTooltipService.show({
                 coordinates: tooltipEventArgs.coordinates,
@@ -192,14 +192,14 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
                 isTouchEvent: true,
             });
 
-            if (this.handleTouchTimeoutId) {
-                clearTimeout(this.handleTouchTimeoutId);
+            if (this.handconstouchTimeoutId) {
+                clearTimeout(this.handconstouchTimeoutId);
             }
-            // At the end of touch action, set a timeout that will let us ignore the incoming mouse events for a small amount of time
+            // At the end of touch action, set a timeout that will const us ignore the incoming mouse events for a small amount of time
             // TODO: any better way to do this?
-            this.handleTouchTimeoutId = setTimeout(() => {
-                this.handleTouchTimeoutId = undefined;
-            }, this.handleTouchDelay);
+            this.handconstouchTimeoutId = setTimeout(() => {
+                this.handconstouchTimeoutId = undefined;
+            }, this.handconstouchDelay);
         });
     }
 
@@ -211,12 +211,12 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
         rootNode: ContainerElement,
         isPointerEvent: boolean,
         isTouchEvent: boolean): ITooltipEventArgs<T> {
-        let target = <HTMLElement> (<Event> d3Event).target;
-        let data: T = d3Select<HTMLElement, T>(target).datum();
+        const target = <HTMLElement> (<Event> d3Event).target;
+        const data: T = d3Select<HTMLElement, T>(target).datum();
 
-        let mouseCoordinates = this.getCoordinates(rootNode, isPointerEvent);
-        let elementCoordinates: number[] = this.getCoordinates(target, isPointerEvent);
-        let tooltipEventArgs: ITooltipEventArgs<T> = {
+        const mouseCoordinates = this.getCoordinates(rootNode, isPointerEvent);
+        const elementCoordinates: number[] = this.getCoordinates(target, isPointerEvent);
+        const tooltipEventArgs: ITooltipEventArgs<T> = {
             data,
             context: target,
             coordinates: mouseCoordinates,
@@ -228,16 +228,16 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
     }
 
     private canDisplayTooltip(d3Event: any): boolean {
-        let canDisplay: boolean = true;
-        let mouseEvent: MouseEvent = <MouseEvent> d3Event;
+        let canDisplay = true;
+        const mouseEvent: MouseEvent = <MouseEvent> d3Event;
         if (mouseEvent.buttons !== undefined) {
             // Check mouse buttons state
-            let hasMouseButtonPressed = mouseEvent.buttons !== 0;
+            const hasMouseButtonPressed = mouseEvent.buttons !== 0;
             canDisplay = !hasMouseButtonPressed;
         }
 
         // Make sure we are not ignoring mouse events immediately after touch end.
-        canDisplay = canDisplay && (this.handleTouchTimeoutId == null);
+        canDisplay = canDisplay && (this.handconstouchTimeoutId == null);
 
         return canDisplay;
     }
@@ -247,14 +247,14 @@ class TooltipServiceWrapper implements ITooltipServiceWrapper {
 
         if (isPointerEvent) {
             // copied from d3_eventSource (which is not exposed)
-            let e = <any> d3Event;
+            const e = <any> d3Event;
 
 
-            let rect = rootNode.getBoundingClientRect();
+            const rect = rootNode.getBoundingClientRect();
             coordinates = [e.clientX - rect.left - rootNode.clientLeft, e.clientY - rect.top - rootNode.clientTop];
         }
         else {
-            let touchCoordinates = d3Touches(rootNode);
+            const touchCoordinates = d3Touches(rootNode);
             if (touchCoordinates && touchCoordinates.length > 0) {
                 coordinates = touchCoordinates[0];
             }

@@ -1,5 +1,5 @@
-export let myResources = {};
-let key = "LanguageKey";
+export const myResources = {};
+const key = "LanguageKey";
 myResources[key] = {
     defaultValue: "English(English)",
     localization: {
