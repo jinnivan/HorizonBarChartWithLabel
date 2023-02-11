@@ -468,6 +468,7 @@ export class BarChart implements IVisual {
         transparentOpacity: 0.5,
         xAxisFontMultiplier: 0.04,
         xScalePadding: 0.15,
+        yScalePadding: 10,
         xScaledMin: 30,
     };
     private svg: Selection<SVGElement, {}, HTMLElement, any>;
@@ -635,6 +636,7 @@ export class BarChart implements IVisual {
             .rangeRound([5, height])
             .padding(BarChart.Config.barPadding)
             .paddingOuter(outerPadding)
+            //.paddingOuter(BarChart.Config.yScalePadding)
             .align(0)
             //.rangeBands([5, height], BarChart.Config.barPadding, outerPadding);
 
@@ -743,7 +745,7 @@ export class BarChart implements IVisual {
             .append<SVGElement> ("g")
             .classed("bar", true)
             .attr("x", BarChart.Config.xScalePadding)// .merge(bars)
-            .attr("y", (d) => yScale(d.category))
+            .attr("y", (d) => BarChart.Config.yScalePadding+yScale(d.category))
             .attr("height", yHeight)
             .attr("width", (d) => xScale(<number> d.value))
 
@@ -768,7 +770,7 @@ export class BarChart implements IVisual {
                 (settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
                 settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset)
-            .attr("y", (d) => yScale(d.category))
+            .attr("y", (d) => BarChart.Config.yScalePadding+yScale(d.category))
             .attr("height", yHeight /
                 (
                     (settings.barShape.shape === "Line" ||
@@ -798,7 +800,7 @@ export class BarChart implements IVisual {
                 settings.barShape.shape === "Lollipop" ||
                 settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset)            
             //.attr("y", (d) => yScale(d.category))
-            .attr("y", (d) => yScale(d.category) + ( yHeight /
+            .attr("y", (d) => BarChart.Config.yScalePadding+yScale(d.category) + ( yHeight /
             (
                 (
                     settings.barShape.shape === "Line" ||
@@ -838,7 +840,7 @@ export class BarChart implements IVisual {
             circle
                 .merge(mergeElement)
                 .attr("cx", (d) => getHeadPositionX(d.value, d.width) - 2 - yHeight / 8)
-                .attr("cy", (d) => yScale(d.category) + yHeight / 16)
+                .attr("cy", (d) => BarChart.Config.yScalePadding+yScale(d.category) + yHeight / 16)
                 // - textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4,
                 .attr("r", yHeight / 8)
                 .attr("fill", viewModel.settings.barShape.headColor.solid.color)
@@ -858,9 +860,9 @@ export class BarChart implements IVisual {
             line.merge(mergeElement)
                 .attr("x1", (d) => getHeadPositionX(d.value, d.width) - 7 - yHeight / 32)
                 .attr("x2", (d) => getHeadPositionX(d.value, d.width) - 7 - yHeight / 32)
-                .attr("y1", (d) => yScale(d.category) - yHeight / 16)
+                .attr("y1", (d) => BarChart.Config.yScalePadding+yScale(d.category) - yHeight / 16)
                 // - textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4,
-                .attr("y2", (d) => yScale(d.category) + yHeight / 16 + yHeight / 8)
+                .attr("y2", (d) => BarChart.Config.yScalePadding+yScale(d.category) + yHeight / 16 + yHeight / 8)
                 // - textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4,
                 .attr("stroke-width", yHeight / 16)
                 .attr("stroke", viewModel.settings.barShape.headColor.solid.color)
@@ -897,7 +899,7 @@ export class BarChart implements IVisual {
 
         texts.merge(mergeElement)
             .attr("height", yHeight)
-            .attr("y", (d) => yScale(d.category) + yHeight / 2 + textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4)
+            .attr("y", (d) => BarChart.Config.yScalePadding+yScale(d.category) + yHeight / 2 + textMeasurementService.textMeasurementService.measureSvgTextHeight(textProperties) / 4)
             .attr("x", (d) => (settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
                 settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset - 10)
@@ -937,7 +939,7 @@ if (viewModel.settings.experimental.show){
             ?"end"
             :"start"; 
         })
-        .attr("font-size", fontSizeToUse)
+        .attr("font-size", fontSizeToUse-1)
         .attr("font-family", fontFamilyToUse) 
         //.attr("style", "mix-blend-mode: " + this.IBarChartSettings.experimental.blendMode)
         .attr("fill", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10   
@@ -997,7 +999,7 @@ if (viewModel.settings.experimental.show){
                         ? offset +  getTextPositionX(viewModel.dataMax , d.overlapValue , d.currTextWidth , CateOffset)
                         :  getTextPositionX(d.value , d.overlapValue , d.currTextWidth , CateOffset);
                 })
-                .attr("font-size", fontSizeToUse)
+                .attr("font-size", fontSizeToUse+1)
                 .attr("font-family", fontFamilyToUse)
                 .attr("fill", viewModel.settings.showBarLabels.textColor.solid.color)
                 .attr("text-anchor", (d) => { return  viewModel.settings.showBarLabels.alignBarLabels === true   
@@ -1126,17 +1128,17 @@ if (viewModel.settings.experimental.show){
 
         function getTextPositionY(category: string, textProps: TextProperties) {
             if (settings.barShape.shape === "Bar") {
-                return yScale(category) + yHeight / 2 +
+                return BarChart.Config.yScalePadding+yScale(category) + yHeight / 2 +
                     textMeasurementService.textMeasurementService.measureSvgTextHeight(textProps) / 4;
             } else if (settings.barShape.shape === "Line" ||
                     settings.barShape.shape === "Lollipop" ||
                     settings.barShape.shape === "Hammer Head") {
                 if (settings.barShape.labelPosition === "Top") {
-                    return yScale(category) +
+                    return BarChart.Config.yScalePadding+yScale(category) +
                     yHeight / 16 +
                     textMeasurementService.textMeasurementService.measureSvgTextHeight(textProps) / 4;
                 } else {
-                    return yScale(category) +
+                    return BarChart.Config.yScalePadding+yScale(category) +
                     yHeight / 2 +
                     textMeasurementService.textMeasurementService.measureSvgTextHeight(textProps) / 4;
                 }
