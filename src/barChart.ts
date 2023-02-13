@@ -508,7 +508,6 @@ export class BarChart implements IVisual {
         this.events = options.host.eventService;
         this.host = options.host;
         this.selectionManager = options.host.createSelectionManager();
-
         this.selectionManager.registerOnSelectCallback(() => {
             this.syncSelectionState(this.barSelection, this.selectionManager.getSelectionIds() as ISelectionId[]);
         });
@@ -523,11 +522,11 @@ export class BarChart implements IVisual {
 
         this.barContainer = svg.append<SVGElement> ("g")
             .classed("barContainer", true);
-
         this.xAxis = svg.append<SVGElement> ("g")
             .classed("xAxis", true);
         this.divContainer = select(".divContainer");
 
+        this.handleContextMenu();
     }
 
     /**
@@ -539,7 +538,7 @@ export class BarChart implements IVisual {
      *                                        the visual had queried.
      */
     public update(options: VisualUpdateOptions) {
-
+        
         // bar chart diagram
         //  ________________________________   _
         //  |                               |  |
@@ -1170,11 +1169,28 @@ if (viewModel.settings.experimental.show){
             return xScale(<number> value) + 8;
         }
     }
-
+    
     this.events.renderingFinished(options);
 }
 
 
+private handleContextMenu(): void {
+    // handle context menu
+    this.svg.on('contextmenu', () => {
+        const mouseEvent: MouseEvent = <MouseEvent>(d3Event);
+        const emptySelection = {
+            "measures": [],
+            "dataMap": {
+            }
+        };
+
+        this.selectionManager.showContextMenu(emptySelection, {
+            x: mouseEvent.clientX,
+            y: mouseEvent.clientY
+        });
+        mouseEvent.preventDefault();
+    });
+}
 
 /**
  *  through the objects defined in the capabilities and adds the properties to the format pane
