@@ -412,7 +412,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             category: category.values[i] + "",
             color: getCategoricalObjectValue<Fill> (category, i, "colorSelector", "fill", defaultColor).solid.color,
             currTextWidth,
-            formattedOverlapValue: "",
+            formattedOverlapValue: LabelDataValue.length > 0 ? valueFormatterForCategories.format(overlapDataValue[i]) : null,
             formattedValue: valueFormatterForCategories.format(dataValue.values[i]),
             overlapValue: overlapDataValue.length > 0 ? overlapDataValue[i] : null,
             LabelformattedValue: LabelDataValue.length > 0 ? valueFormatterForCategories.format(LabelDataValue[i]) : null,
@@ -942,25 +942,24 @@ if (viewModel.settings.experimental.show){
 
     textValues2.merge(mergeElement).attr("height", yHeight)
     .attr("y", (d) => getTextPositionY(d.category, textProperties))
-    .attr("x", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10 
+    .attr("x", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10 
         ? CateOffset + xScale(<number> d.overlapValue) - 5 
         : CateOffset + xScale(<number> d.overlapValue) + 5;
     })
-    .attr("text-anchor", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10   
+    .attr("text-anchor", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10   
         ?"end"
         :"start"; 
     })
-    .attr("font-size", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10 
+    .attr("font-size", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10 
     ? fontSizeToUse-1 
     : fontSizeToUse;
     })
     .attr("font-family", fontFamilyToUse) 
     //.attr("style", "mix-blend-mode: " + this.IBarChartSettings.experimental.blendMode)
-    .attr("fill", (d) => { return  xScale(<number> d.overlapValue) > getWidth(toFormat(d.overlapValue,".2f"))+ 10   
+    .attr("fill", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10   
         ? viewModel.settings.experimental.InnerbarsLabel.solid.color 
         : viewModel.settings.experimental.OuterbarsLabel.solid.color; })
-    .text((d) => { return <string>  toFormat(d.overlapValue,".2f"); 
-    });
+    .text((d) => { return <string>  d.formattedOverlapValue; });
 
     textValues2.exit().remove();
 } else {
