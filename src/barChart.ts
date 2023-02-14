@@ -549,6 +549,19 @@ export class BarChart implements IVisual {
      */
     public update(options: VisualUpdateOptions) {
         
+        if (!options || !options.dataViews || !options.dataViews[0] ) {
+            const removeBars = this.barContainer.selectAll("g.bar");
+            removeBars.selectAll("rect.bar").remove();
+            removeBars.selectAll("rect.overlapBar").remove();
+            removeBars.selectAll("circle").remove();
+            removeBars.selectAll("line").remove();
+            removeBars.selectAll("text.bar-value").remove();
+            removeBars.selectAll("text.overlap-value").remove();
+            removeBars.selectAll("text.bar-text").remove();
+            removeBars.selectAll("rect.valuesRect").remove();
+            removeBars.remove();
+        }
+
         // bar chart diagram
         //  ________________________________   _
         //  |                               |  |
@@ -747,7 +760,7 @@ export class BarChart implements IVisual {
             .selectAll("g.bar")
             .data(viewModel.dataPoints);
 
-        if (viewModel.dataPoints.length === 0) {
+        if (!viewModel || !viewModel.dataPoints || viewModel.dataPoints.length === 0) {
             const removeBars = this.barContainer.selectAll("g.bar");
             removeBars.selectAll("rect.bar").remove();
             removeBars.selectAll("rect.overlapBar").remove();
