@@ -312,7 +312,7 @@
                     }
                 },
                 "InnerbarsLabel": {
-                    "displayName": "Inner Label Color",
+                    "displayName": "Inner Bars Text Color",
                     "type": {
                         "fill": {
                             "solid": {
@@ -322,7 +322,7 @@
                     }
                 },
                 "OuterbarsLabel": {
-                    "displayName": "Outer Label Color",
+                    "displayName": "Outer Bars Text Color",
                     "type": {
                         "fill": {
                             "solid": {

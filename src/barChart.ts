@@ -19,7 +19,7 @@ import {
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
-import ISelectionIdBuilder = powerbi.extensibility.ISelectionIdBuilder;
+//import ISelectionIdBuilder = powerbi.extensibility.ISelectionIdBuilder;
 import IVisual = powerbi.extensibility.visual.IVisual;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
@@ -31,7 +31,7 @@ import PrimitiveValue = powerbi.PrimitiveValue;
 import Fill = powerbi.Fill;
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 
-import {
+/* import {
     legend as Legend,
     legendInterfaces as LI
 } from "powerbi-visuals-utils-chartutils";
@@ -39,7 +39,7 @@ import createLegend = Legend.createLegend;
 import ILegend = LI.ILegend;
 import LegendData = LI.LegendData;
 import MarkerShape = LI.MarkerShape;
-import LegendPosition = LI.LegendPosition;
+import LegendPosition = LI.LegendPosition; */
 
 import {
     createTooltipServiceWrapper,
@@ -50,8 +50,8 @@ import {
 import { getCategoricalObjectValue, getValue } from "./objectEnumerationUtility";
 
 import ISelectionId = powerbi.visuals.ISelectionId;
-import { EnumType } from "typescript";
-import { isEmpty } from "powerbi-visuals-utils-svgutils/lib/shapes/shapes";
+//import { EnumType } from "typescript";
+//import { isEmpty } from "powerbi-visuals-utils-svgutils/lib/shapes/shapes";
 
 /**
  * An interface for reporting rendering events
@@ -429,7 +429,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
 
     }
 
-
+    // Front bar 
     const overlapDataValueMax = Math.max(...overlapDataValue);
     const dataMaxLocal = <number> dataValue.maxLocal <= overlapDataValueMax ? overlapDataValueMax : dataValue.maxLocal;
 
@@ -526,6 +526,7 @@ export class BarChart implements IVisual {
             .classed("xAxis", true);
         this.divContainer = select(".divContainer");
 
+        // Context Menu
         this.handleContextMenu();
     }
 
@@ -928,7 +929,7 @@ export class BarChart implements IVisual {
 
         texts.exit().remove();
 
-/////////////////////////////////////////////////////////////////////////////////        
+///////////////////////////////////////////////////////////////////////////////// Bar Label       
 
 if (viewModel.settings.experimental.show){
     const textValues2 = bars
@@ -967,7 +968,7 @@ if (viewModel.settings.experimental.show){
     textValues2.remove()
 }
 
-////////////////////////////////////////////////////////////////////// Bar Label 
+////////////////////////////////////////////////////////////////////// Second Label
     
     if (viewModel.settings.showBarLabels.show) {
 
@@ -1028,7 +1029,7 @@ if (viewModel.settings.experimental.show){
         textValues.remove()
     }
 
-/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////// Tooltip
 
     this.tooltipServiceWrapper.addTooltip(this.barContainer.selectAll(".bar"),
         (tooltipEvent: ITooltipEventArgs<IBarChartDataPoint>) => this.getTooltipData(tooltipEvent.data),
@@ -1171,25 +1172,6 @@ if (viewModel.settings.experimental.show){
     }
     
     this.events.renderingFinished(options);
-}
-
-
-private handleContextMenu(): void {
-    // handle context menu
-    this.svg.on('contextmenu', () => {
-        const mouseEvent: MouseEvent = <MouseEvent>(d3Event);
-        const emptySelection = {
-            "measures": [],
-            "dataMap": {
-            }
-        };
-
-        this.selectionManager.showContextMenu(emptySelection, {
-            x: mouseEvent.clientX,
-            y: mouseEvent.clientY
-        });
-        mouseEvent.preventDefault();
-    });
 }
 
 /**
@@ -1390,6 +1372,25 @@ private getTooltipData(value: any): VisualTooltipDataItem[] {
 
     return tooltip;
 }
+
+private handleContextMenu(): void {
+    // handle context menu
+    this.svg.on('contextmenu', () => {
+        const mouseEvent: MouseEvent = <MouseEvent>(d3Event);
+        const emptySelection = {
+            "measures": [],
+            "dataMap": {
+            }
+        };
+
+        this.selectionManager.showContextMenu(emptySelection, {
+            x: mouseEvent.clientX,
+            y: mouseEvent.clientY
+        });
+        mouseEvent.preventDefault();
+    });
+}
+
 }
 function getMetadataIndexFor(displayName: any, values: any) {
 let i;
