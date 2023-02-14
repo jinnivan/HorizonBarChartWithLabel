@@ -401,6 +401,15 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             value2: categorical.values[categorical.values.length - 1],
         });
 
+        const valueFormatterForOverlap = valueFormatter.create({
+            format: valueFormatter.getFormatStringByColumn(
+                metadata.columns[getMetadataIndexFor(
+                    categorical.values[1].source.displayName, metadata.columns)]),
+            value: dataValue,
+            value2: categorical.values[categorical.values.length - 1],
+        });
+
+        
         textProperties = {
             fontFamily: IBarChartSettings.fontParams.fontFamily,
             fontSize: IBarChartSettings.fontParams.fontSize + "px",
@@ -412,7 +421,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             category: category.values[i] + "",
             color: getCategoricalObjectValue<Fill> (category, i, "colorSelector", "fill", defaultColor).solid.color,
             currTextWidth,
-            formattedOverlapValue: LabelDataValue.length > 0 ? valueFormatterForCategories.format(overlapDataValue[i]) : null,
+            formattedOverlapValue: overlapDataValue.length > 0 ? valueFormatterForOverlap.format(overlapDataValue[i]) : null,
             formattedValue: valueFormatterForCategories.format(dataValue.values[i]),
             overlapValue: overlapDataValue.length > 0 ? overlapDataValue[i] : null,
             LabelformattedValue: LabelDataValue.length > 0 ? valueFormatterForCategories.format(LabelDataValue[i]) : null,
