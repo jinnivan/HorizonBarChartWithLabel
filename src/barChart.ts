@@ -3,13 +3,10 @@ import "./../style/visual.less";
 import { max, min } from "d3-array";
 import * as d3 from "d3";
 import { scaleBand, scaleLinear} from "d3-scale";
-
 import { textMeasurementService, valueFormatter } from "powerbi-visuals-utils-formattingutils";
 import IValueFormatter = valueFormatter.IValueFormatter;
-
 import { formattingService } from "powerbi-visuals-utils-formattingutils";
 import { TextProperties } from "powerbi-visuals-utils-formattingutils/lib/src/interfaces";
-
 import {
         event as d3Event,
         select as d3Select,
@@ -48,7 +45,6 @@ import {
 } from "./tooltipServiceWrapper";
 
 import { getCategoricalObjectValue, getValue } from "./objectEnumerationUtility";
-
 import ISelectionId = powerbi.visuals.ISelectionId;
 //import { EnumType } from "typescript";
 //import { isEmpty } from "powerbi-visuals-utils-svgutils/lib/shapes/shapes";
@@ -244,7 +240,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
         || !dataViews[0]
         || !dataViews[0].categorical
         || !dataViews[0].categorical.categories
-        || !dataViews[0].categorical.categories[0].source
+        //|| !dataViews[0].categorical.categories[0].source
         || !dataViews[0].categorical.values) {
         return viewModel;
     }
@@ -255,6 +251,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
 
     let dataValue = categorical.values[0];
     const dataIndex = getIndex(metadata,"measure");
+
     if (dataIndex !== -1) {
         dataValue = getDataValue(categorical.values, dataIndex);
     }
@@ -518,7 +515,7 @@ export class BarChart implements IVisual {
         this.host = options.host;
         this.selectionManager = options.host.createSelectionManager();
         this.selectionManager.registerOnSelectCallback(() => {
-            this.syncSelectionState(this.barSelection, this.selectionManager.getSelectionIds() as ISelectionId[]);
+        this.syncSelectionState(this.barSelection, this.selectionManager.getSelectionIds() as ISelectionId[]);
         });
 
         this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, options.element);
@@ -548,187 +545,77 @@ export class BarChart implements IVisual {
      *                                        the visual had queried.
      */
     public update(options: VisualUpdateOptions) {
-        
-        if (!options || !options.dataViews || !options.dataViews[0] ) {
-            const removeBars = this.barContainer.selectAll("g.bar");
-            removeBars.selectAll("rect.bar").remove();
-            removeBars.selectAll("rect.overlapBar").remove();
-            removeBars.selectAll("circle").remove();
-            removeBars.selectAll("line").remove();
-            removeBars.selectAll("text.bar-value").remove();
-            removeBars.selectAll("text.overlap-value").remove();
-            removeBars.selectAll("text.bar-text").remove();
-            removeBars.selectAll("rect.valuesRect").remove();
-            removeBars.remove();
-        }
 
-        // bar chart diagram
-        //  ________________________________   _
-        //  |                               |  |
-        //  |                               |  |  top and bottom padding (calcOuterPadding, outerPadding)
-        //  |_______________________        |  _    _
-        //  |                       |       |  |    |
-        //  |                       |       |  |    |
-        //  |_______________________|       |  _    |   x (calcX, xScaledMin, xScaledMax)
-        //  |                               |  |    |   It is sum of the bar height
-        //  |                               |  |    |   and the space between two bars
-        //  |                               |  |    |
-        //  |_____________________          |  _    _
-        //  |                     |         |  |
-        //  |                     |         |  | h
-        //  |_____________________|         |  _
-        //  |                               |  | padding between bars (barPadding).
-        //  |                               |  | This is percent of x that will be
-        //  |                               |  | used for padding and th rest will be bar height.
-        //  |_________________              |  _
-        //  |                 |             |  |
-        //  |                 |             |  | h
-        //  |_________________|             |  _
-        //  |                               |  |
-        //  |                               |  |  top and bottom padding are equal
-        //  |_______________________________|  _
-
- 
+        if (!options || !options.dataViews || !options.dataViews[0] || !options.dataViews[1] || !options.dataViews[2]) {
+            this.clearViewport(); }
         this.events.renderingStarted(options);
         const viewModel: IBarChartViewModel = visualTransform(options, this.host);
-
         const settings = this.IBarChartSettings = viewModel.settings;
         const width = options.viewport.width;
         let height = options.viewport.height;
-
-        // Calculate max height of each bar based on the total height of the visual
-        //let xScaledMax = height / BarChart.Config.maxHeightScale;
-        // Min height is independent of height the bar should be visible
-        // irrespective of the number of bars or the height of the visual
-        //let xScaledMin = BarChart.Config.xScaledMin;
-
         const xScaledMax = (settings.barHeight.bheight === 0 ? height / BarChart.Config.maxHeightScale : settings.barHeight.bheight);
         let xScaledMin = (settings.barHeight.bheight === 0 ? BarChart.Config.xScaledMin : settings.barHeight.bheight);
-
         if (settings.barHeight && settings.barHeight.show) {
-
             xScaledMin = settings.barHeight.height;
         } else {
             xScaledMin = BarChart.Config.xScaledMin;
         }
         let outerPadding = -0.1
-        // calcX is the calculated height of the bar+inner padding that will be required if we simply
-        // distribute the height with the bar count (no scrolling)
-        const calcX = height /
-            (2 * BarChart.Config.outerPaddingScale - BarChart.Config.xScalePadding + viewModel.dataPoints.length);
-        // calcHeight is the height required for the entire bar chart
-        // if min allowed bar height is used. (This is needed for setting the scroll height)
-        const calcHeight = (-2 * outerPadding - BarChart.Config.xScalePadding + viewModel.dataPoints.length)
-             * xScaledMin;
-        // The parent element is not directly available to us since we are in a sandbox
-        
+        const calcX = height / (2 * BarChart.Config.outerPaddingScale - BarChart.Config.xScalePadding + viewModel.dataPoints.length);
+        const calcHeight = (-2 * outerPadding - BarChart.Config.xScalePadding + viewModel.dataPoints.length) * xScaledMin;
         if (calcX > xScaledMax) {
             if (xScaledMax >= xScaledMin) {
-                const tempouterPadding = (height - (-BarChart.Config.xScalePadding + viewModel.dataPoints.length)
-                     * xScaledMax) /
-                    (2 * xScaledMax);
-                if (tempouterPadding > 0) {
-                    outerPadding = tempouterPadding;
-                }
+                const tempouterPadding = (height - (-BarChart.Config.xScalePadding + viewModel.dataPoints.length) * xScaledMax) / (2 * xScaledMax);
+                if (tempouterPadding > 0) {outerPadding = tempouterPadding;}
             } else {
-                const tempOuterPadding = (height - (-BarChart.Config.xScalePadding + viewModel.dataPoints.length)
-                     * xScaledMin) /
-                    (2 * xScaledMin);
-                if (tempOuterPadding > 0) {
-                    outerPadding = tempOuterPadding;
-                }
-            }
-        } else {
-            if (calcX < xScaledMin && calcHeight > height) {
-                height = calcHeight ;
-            }
+                const tempOuterPadding = (height - (-BarChart.Config.xScalePadding + viewModel.dataPoints.length) * xScaledMin) / (2 * xScaledMin);
+                if (tempOuterPadding > 0) {outerPadding = tempOuterPadding;}
         }
+        } else { if (calcX < xScaledMin && calcHeight > height) { height = calcHeight ; }}
         const h = options.viewport.height + 5;
         const w = options.viewport.width;
         this.divContainer.attr("style", "width:" + w + "px;height:" + h + "px;overflow-y:auto;overflow-x:hidden;margin-top:14px;margin-bottom:5px;");
-
         this.svg.attr("width", width);
         this.svg.attr("height", height);
-    
         this.xAxis.style("font-size", parseInt(min(<any>[height, width]), 10) * BarChart.Config.xAxisFontMultiplier);
-        // this.xAxis.attr("font-size",parseInt(min([height, width])) * BarChart.Config.xAxisFontMultiplier)
-
-        /*
-        let yScale = scaleBand()
-            .domain(viewModel.dataPoints.map((d) => d.category))
-            .rangeRound([5, height])
-            .padding(BarChart.Config.barPadding)
-            .paddingOuter(outerPadding)
-            //.rangeBands([5, height], BarChart.Config.barPadding, outerPadding);
-
-            /////////// yScale.bandwidth
-            
-        //let yHeight = yScale.bandwidth();
-        */
         const yScale = scaleBand()
             .domain(viewModel.dataPoints.map((d) => d.category))
             .rangeRound([5, height])
             .padding(BarChart.Config.barPadding)
             .paddingOuter(outerPadding)
             .align(0)
-            //.rangeBands([5, height], BarChart.Config.barPadding, outerPadding);
-
         const yHeight = (settings.barHeight.bheight === 0 ? yScale.bandwidth() : settings.barHeight.bheight);
-
-        // cap the fontsize between 8.5 and 40 for aesthetics (only when autoscaling font)
         let fontSizeToUse = this.IBarChartSettings.fontParams && this.IBarChartSettings.fontParams.show
             ? this.IBarChartSettings.fontParams.fontSize
             : yHeight / BarChart.Config.fontScaleFactor;
         if (fontSizeToUse < 8.5 && !this.IBarChartSettings.fontParams.show) {
-            fontSizeToUse = 8.5;
-        }
+            fontSizeToUse = 8.5;}
         if (fontSizeToUse > 40 && !this.IBarChartSettings.fontParams.show) {
-            fontSizeToUse = 40;
-        }
-        const fontFamilyToUse = this.IBarChartSettings.fontParams && this.IBarChartSettings.fontParams.show
-            ? this.IBarChartSettings.fontParams.fontFamily
-            : "Segoe UI";
-        // Calculate label size to compute max bar size to use
-        //  to leave room for label to be displayed inside the draw area for the .
-        // Use the formatted value for the longest bar
+            fontSizeToUse = 40;}
+        const fontFamilyToUse = this.IBarChartSettings.fontParams && this.IBarChartSettings.fontParams.show ? this.IBarChartSettings.fontParams.fontFamily : "Segoe UI";
         const indexForDataMax = getIndexForDataMax(viewModel.dataPoints);
-        const formattedValue = viewModel.dataPoints.length > 0
-            ? viewModel.dataPoints[indexForDataMax].formattedValue
-            : "";
+        const formattedValue = viewModel.dataPoints.length > 0 ? viewModel.dataPoints[indexForDataMax].formattedValue : "";
         let textProperties: ITextProperties = {
             fontFamily: fontFamilyToUse,
             fontSize: fontSizeToUse + "px",
-            text: formattedValue,
-        };
-
+            text: formattedValue,};
         // MAX Category Range ***********************************/
         const indexForCateMax = getIndexForCateMax(viewModel.dataPoints);
-        const CateformattedValue = viewModel.dataPoints.length > 0
-        ? viewModel.dataPoints[indexForCateMax].category
-        : "";
+        const CateformattedValue = viewModel.dataPoints.length > 0 ? viewModel.dataPoints[indexForCateMax].category : "";
         const CateProperties: ITextProperties = {
             fontFamily: fontFamilyToUse,
             fontSize: fontSizeToUse + "px",
-            text: CateformattedValue,
-        }; 
-        const CateOffset = (yHeight > 10 + BarChart.Config.xScalePadding + textMeasurementService.measureSvgTextWidth(CateProperties) 
-            ? yHeight/2 
-            : 10 + BarChart.Config.xScalePadding + textMeasurementService.measureSvgTextWidth(CateProperties)
-        ); 
-  
+            text: CateformattedValue,}; 
+        const CateOffset = (yHeight > 10 + BarChart.Config.xScalePadding + textMeasurementService.measureSvgTextWidth(CateProperties) ? yHeight/2  : 10 + BarChart.Config.xScalePadding + textMeasurementService.measureSvgTextWidth(CateProperties)); 
         // MAX Bar Label Range ***********************************/
         const indexForLabelMax = getIndexForLabelMax(viewModel.dataPoints);
-        const LabelformattedValue = viewModel.dataPoints.length > 0
-        ? viewModel.dataPoints[indexForLabelMax].LabelformattedValue
-        : "";
+        const LabelformattedValue = viewModel.dataPoints.length > 0 ? viewModel.dataPoints[indexForLabelMax].LabelformattedValue : "";
         const labelProperties: ITextProperties = {
             fontFamily: fontFamilyToUse,
             fontSize: fontSizeToUse + "px",
             text: LabelformattedValue,
         }; 
         const offset = textMeasurementService.measureSvgTextWidth(labelProperties) + 30 ;
-
-
         const xScale = scaleLinear()
             .domain([0, viewModel.dataMax])
             .range([0, (viewModel.settings.showBarLabels.show 
@@ -744,14 +631,11 @@ export class BarChart implements IVisual {
                 - 15) ]); // subtracting 40 for padding between the bar and the label
 
         // empty rect to take full width for clickable area for clearing selection
+        const rectContainer = this.barContainer.selectAll("rect.rect-container").data([1]);
 
-        const rectContainer = this.barContainer.selectAll("rect.rect-container").data([0]);
-
-        rectContainer
-            .enter()
-            .append<SVGElement> ("rect")
-            .classed("rect-container", true);
-
+        rectContainer.enter()
+        rectContainer.append<SVGElement> ("rect")
+        rectContainer.classed("rect-container", true);
         rectContainer.attr("width", width);
         rectContainer.attr("height", height);
         rectContainer.attr("fill", "transparent");
@@ -760,17 +644,8 @@ export class BarChart implements IVisual {
             .selectAll("g.bar")
             .data(viewModel.dataPoints);
 
-        if (!viewModel || !viewModel.dataPoints || viewModel.dataPoints.length === 0) {
-            const removeBars = this.barContainer.selectAll("g.bar");
-            removeBars.selectAll("rect.bar").remove();
-            removeBars.selectAll("rect.overlapBar").remove();
-            removeBars.selectAll("circle").remove();
-            removeBars.selectAll("line").remove();
-            removeBars.selectAll("text.bar-value").remove();
-            removeBars.selectAll("text.overlap-value").remove();
-            removeBars.selectAll("text.bar-text").remove();
-            removeBars.selectAll("rect.valuesRect").remove();
-            removeBars.remove();
+        if (viewModel.dataPoints.length === 0) {
+            this.clearViewport();
         }
 
         bars
@@ -781,13 +656,11 @@ export class BarChart implements IVisual {
             .attr("y", (d) => yScale(d.category))
             .attr("height", yHeight)
             .attr("width", (d) => xScale(<number> d.value))
-
             .attr("selected", (d) => d.selected);
 
         bars = this.barContainer
             .selectAll("g.bar")
             .data(viewModel.dataPoints);
-
             const rects = bars
             .selectAll("rect.bar").data((d) => [d]);
 
@@ -798,61 +671,44 @@ export class BarChart implements IVisual {
 
         rects
             .merge(mergeElement)
-            //.attr("x", BarChart.Config.xScalePadding)
             .attr("x", 
                 (settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
                 settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset)
             .attr("y", (d) => yScale(d.category))
             .attr("height", yHeight /
-                (
-                    (settings.barShape.shape === "Line" ||
-                     settings.barShape.shape === "Lollipop" ||
-                     settings.barShape.shape === "Hammer Head") ? 8 : 1
-                ))
+                ((  settings.barShape.shape === "Line" ||
+                    settings.barShape.shape === "Lollipop" ||
+                    settings.barShape.shape === "Hammer Head") ? 8 : 1 ))
             .attr("width", (d) => xScale(<number> d.value))
             .attr("fill", viewModel.settings.generalView.barsColor.solid.color)
             .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
             .attr("selected", (d) => d.selected);
-
         rects.exit().remove();
-
         const overlapRects = bars.selectAll("rect.overlapBar").data((d) => [d]);
-
         mergeElement = overlapRects
             .enter()
             .append<SVGElement> ("rect")
             .classed("overlapBar", true);
-
         overlapRects
             .merge(mergeElement)
-            // overlapRects
-            //.attr("x", BarChart.Config.xScalePadding)
             .attr("x",
                 (settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
-                settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset)            
-            //.attr("y", (d) => yScale(d.category))
+                settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset)
             .attr("y", (d) => yScale(d.category) + ( yHeight /
-            (
-                (
-                    settings.barShape.shape === "Line" ||
-                    settings.barShape.shape === "Lollipop" ||
-                    settings.barShape.shape === "Hammer Head"
-                ) ? 8 : 1) - yHeight /
-                (
-                    (
-                        settings.barShape.shape === "Line" ||
-                        settings.barShape.shape === "Lollipop" ||
-                        settings.barShape.shape === "Hammer Head"
-                    ) ? 8 : 1.5)
-                
-            ) / 2
-            )
+            ((  settings.barShape.shape === "Line" ||
+                settings.barShape.shape === "Lollipop" ||
+                settings.barShape.shape === "Hammer Head"
+            ) ? 8 : 1) - yHeight /
+            ((
+                settings.barShape.shape === "Line" ||
+                settings.barShape.shape === "Lollipop" ||
+                settings.barShape.shape === "Hammer Head"
+            ) ? 8 : 1.5)) / 2 )
             .attr("height", yHeight /
                 (
-                    (
-                        settings.barShape.shape === "Line" ||
+                    (   settings.barShape.shape === "Line" ||
                         settings.barShape.shape === "Lollipop" ||
                         settings.barShape.shape === "Hammer Head"
                     ) ? 8 : 1.5))
@@ -860,21 +716,17 @@ export class BarChart implements IVisual {
             .attr("fill", viewModel.settings.generalView.overlapColor.solid.color)
             .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
             .attr("selected", (d) => d.selected);
-
         overlapRects.exit().remove();
-
         if (settings.barShape.shape === "Lollipop") {
             const circle = bars.selectAll("circle").data((d) => [d]);
 
             mergeElement = circle.enter()
                 .append<SVGElement> ("circle")
                 .classed("head", true);
-
             circle
                 .merge(mergeElement)
                 .attr("cx", (d) => getHeadPositionX(d.value, d.width) - 2 - yHeight / 8)
                 .attr("cy", (d) => yScale(d.category) + yHeight / 16)
-                // - textMeasurementService.measureSvgTextHeight(textProperties) / 4,
                 .attr("r", yHeight / 8)
                 .attr("fill", viewModel.settings.barShape.headColor.solid.color)
                 .attr("fill-opacity", viewModel.settings.generalView.opacity / 100);
@@ -882,14 +734,11 @@ export class BarChart implements IVisual {
         } else {
             bars.selectAll("circle").remove();
         }
-
         if (settings.barShape.shape === "Hammer Head") {
             const line = bars.selectAll("line").data((d) => [d]);
-
             mergeElement = line.enter()
                 .append<SVGElement> ("line")
                 .classed("head", true);
-
             line.merge(mergeElement)
                 .attr("x1", (d) => getHeadPositionX(d.value, d.width) - 7 - yHeight / 32)
                 .attr("x2", (d) => getHeadPositionX(d.value, d.width) - 7 - yHeight / 32)
@@ -904,32 +753,27 @@ export class BarChart implements IVisual {
         } else {
             bars.selectAll("line").remove();
         }
-
         textProperties = {
             fontFamily: fontFamilyToUse,
             fontSize: fontSizeToUse + "px",
             text: "TEXT for calculating height",
         };
-
         const texts = bars
             .selectAll("text.bar-text").data((d) => [d]);
-
-                    
         mergeElement = (settings.barShape.shape === "Line" ||
         settings.barShape.shape === "Lollipop" ||
         settings.barShape.shape === "Hammer Head") 
-        ?   texts
+        ? texts
             .enter()
             .append<SVGElement> ("text")
             .classed("bar-text", true)
             .attr("text-anchor", "start")
-        :   texts
+        : texts
             .enter()
             .append<SVGElement> ("text")
             .classed("bar-text", true)
             .attr("text-anchor", "end")
         ;
-
         texts.merge(mergeElement)
             .attr("height", yHeight)
             .attr("y", (d) => yScale(d.category) + yHeight / 2 + textMeasurementService.measureSvgTextHeight(textProperties) / 4)
@@ -941,14 +785,6 @@ export class BarChart implements IVisual {
             .attr("fill", viewModel.settings.generalView.textColor.solid.color)
             .attr("width", (d) =>  CateOffset)
             .text((d) => d.category)
-            
-            //.each((d) => d.width = xScale(<number> d.value));
-       /* if (this.IBarChartSettings.experimental.show) {
-            texts.attr("style", "mix-blend-mode: " + this.IBarChartSettings.experimental.blendMode);
-        } else {
-            texts.attr("style", "mix-blend-mode: initial");
-        } */
-
         texts.exit().remove();
 
 ///////////////////////////////////////////////////////////////////////////////// Bar Label       
@@ -956,50 +792,37 @@ export class BarChart implements IVisual {
 if (viewModel.settings.experimental.show){
     const textValues2 = bars
     .selectAll("text.overlap-value").data((d) => [d]);
-
     mergeElement = textValues2
     .enter()
     .append<SVGElement> ("text")
     .classed("overlap-value", true)
-
     textValues2.merge(mergeElement).attr("height", yHeight)
     .attr("y", (d) => getTextPositionY(d.category, textProperties))
     .attr("x", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10 
         ? CateOffset + xScale(<number> d.overlapValue) - 5 
         : CateOffset + xScale(<number> d.overlapValue) + 5;
     })
-    .attr("text-anchor", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10   
-        ?"end"
-        :"start"; 
+    .attr("text-anchor", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10 ? "end" : "start"; 
     })
-    .attr("font-size", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10 
-    ? fontSizeToUse-1 
-    : fontSizeToUse;
+    .attr("font-size", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10 ? fontSizeToUse-1 : fontSizeToUse;
     })
     .attr("font-family", fontFamilyToUse) 
-    //.attr("style", "mix-blend-mode: " + this.IBarChartSettings.experimental.blendMode)
     .attr("fill", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10   
         ? viewModel.settings.experimental.InnerbarsLabel.solid.color 
         : viewModel.settings.experimental.OuterbarsLabel.solid.color; })
     .text((d) => { return <string>  d.formattedOverlapValue; });
-
     textValues2.exit().remove();
 } else {
     const textValues2 = bars.selectAll("text.overlap-value")
     textValues2.remove()
 }
-
 ////////////////////////////////////////////////////////////////////// Second Label
-    
     if (viewModel.settings.showBarLabels.show) {
-
         const valuesRect = bars.selectAll("rect.valuesRect").data((d) => [d]);
-
         mergeElement = valuesRect
             .enter()
             .append<SVGElement> ("rect")
             .classed("valuesRect", true);
-
         valuesRect
             .merge(mergeElement)
             .attr("x", (d) => viewModel.settings.showBarLabels.alignBarLabels === true
@@ -1008,38 +831,28 @@ if (viewModel.settings.experimental.show){
             .attr("y", (d) => getTextPositionY(d.category, labelProperties) - 3
                 / 4 * textMeasurementService.measureSvgTextHeight(labelProperties))
             .attr("height", textMeasurementService.measureSvgTextHeight(labelProperties))
-
-            // width is adding 5 for padding around text 
-            // check null
             .attr("width", (d) => (d.LabelformattedValue != null ? offset : 0 ))
             .attr("fill", viewModel.settings.showBarLabels.highlightColor.solid.color)
             .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
             .attr("rx", 2)
             .attr("ry", 2);
-
         valuesRect.exit().remove();
-
         const textValues = bars
             .selectAll("text.bar-value").data((d) => [d]);
-
         mergeElement = textValues
             .enter()
             .append<SVGElement> ("text")
             .classed("bar-value", true)
-
         textValues.merge(mergeElement).attr("height", yHeight)
             .attr("y", (d) => getTextPositionY(d.category, textProperties))
             .attr("x", (d) => {
                 return viewModel.settings.showBarLabels.alignBarLabels === true
                     ? offset +  getTextPositionX(viewModel.dataMax , d.overlapValue , d.currTextWidth , CateOffset)
-                    :  getTextPositionX(d.value , d.overlapValue , d.currTextWidth , CateOffset);
-            })
+                    :  getTextPositionX(d.value , d.overlapValue , d.currTextWidth , CateOffset);})
             .attr("font-size", fontSizeToUse+1)
             .attr("font-family", fontFamilyToUse)
             .attr("fill", viewModel.settings.showBarLabels.textColor.solid.color)
-            .attr("text-anchor", (d) => { return  viewModel.settings.showBarLabels.alignBarLabels === true   
-                ?"end"
-                :"start"; 
+            .attr("text-anchor", (d) => { return  viewModel.settings.showBarLabels.alignBarLabels === true ?"end" :"start"; 
             })
             .text((d) => { return <string> d.LabelformattedValue; });
         textValues.exit().remove();
@@ -1056,7 +869,6 @@ if (viewModel.settings.experimental.show){
         (tooltipEvent: ITooltipEventArgs<IBarChartDataPoint>) => this.getTooltipData(tooltipEvent.data),
         (tooltipEvent: ITooltipEventArgs<IBarChartDataPoint>) => tooltipEvent.data.selectionId,
     );
-
     this.syncSelectionState(
         bars,
         this.selectionManager.getSelectionIds() as ISelectionId[],
@@ -1069,17 +881,11 @@ if (viewModel.settings.experimental.show){
         overlapRects,
         this.selectionManager.getSelectionIds() as ISelectionId[],
     );
-
     const selectionManager = this.selectionManager;
     const syncSelectionState = this.syncSelectionState;
     const IBarChartSettings = this.IBarChartSettings;
-
-    // This must be an anonymous function instead of a lambda because
-    // d3 uses "this" as the reference to the element that was clicked.
-
     const area = select("rect.rect-container");
     area.on("click", () => {
-
         if (IBarChartSettings.clearFilters.show && selectionManager.hasSelection()) {
             selectionManager.clear().then(() => {
                 syncSelectionState(bars, []);
@@ -1093,12 +899,8 @@ if (viewModel.settings.experimental.show){
         overlapRects.attr("fill-opacity", BarChart.Config.solidOpacity);
 
     });
-    
 
     bars.on("click", (d) => {
-
-        // set selected property of the attached data to false for all (later mark the one clicked as selected)
-
         selectionManager.select(d.selectionId).then((ids: ISelectionId[]) => {
             syncSelectionState(bars, ids);
             syncSelectionState(rects, ids);
@@ -1108,24 +910,6 @@ if (viewModel.settings.experimental.show){
     bars.exit()
         .remove();
 
-    /*
-    function getTextPositionX(value: PrimitiveValue, wid: number, offset: number) {
-        if (settings.barShape.shape === "Bar") {
-            return xScale(<number> value) > wid ? xScale(<number> value) + 8 : wid + 12;
-        } else if (
-            settings.barShape.shape === "Line" ||
-            settings.barShape.shape === "Lollipop" ||
-            settings.barShape.shape === "Hammer Head") {
-            if (viewModel.settings.alignBarLabels.show) {
-                return 1.01 * (xScale(<number> value) + 8);
-            }
-            if (settings.barShape.labelPosition === "Top") {
-                return 1.01 * (xScale(<number> value) + 8);
-            } else {
-                return 1.01 * (wid + 8);
-            }
-        }
-    }*/
     function getWidth(value: PrimitiveValue){
         const labelProperties: ITextProperties = {
             fontFamily: fontFamilyToUse,
@@ -1134,7 +918,6 @@ if (viewModel.settings.experimental.show){
         }; 
         return textMeasurementService.measureSvgTextWidth(labelProperties);
     }
-
     function toFormat(value:PrimitiveValue,format: string ){
         let result;
         if (value === null){
@@ -1191,7 +974,6 @@ if (viewModel.settings.experimental.show){
             return xScale(<number> value) + 8;
         }
     }
-    
     this.events.renderingFinished(options);
 }
 
@@ -1307,7 +1089,6 @@ public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions):
                     OuterbarsLabel: this.IBarChartSettings.experimental.OuterbarsLabel,
                     show: this.IBarChartSettings.experimental.show,
                 },
-
                 selector: null,
             });
             break;
@@ -1317,14 +1098,12 @@ public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions):
                 properties: {
                     show: this.IBarChartSettings.clearFilters.show,
                 },
-
                 selector: null,
             });
             break;
         default:
             break;
     }
-
     return objectEnumeration;
 }
 
@@ -1345,6 +1124,19 @@ private isSelectionIdInArray(selectionIds: ISelectionId[], selectionId: ISelecti
     return selectionIds.some((currentSelectionId: ISelectionId) => {
         return currentSelectionId.includes(selectionId);
     });
+}
+
+private clearViewport(): void {
+    const removeBars = this.barContainer.selectAll("g.bar");
+    removeBars.selectAll("rect.bar").remove();
+    removeBars.selectAll("rect.overlapBar").remove();
+    removeBars.selectAll("circle").remove();
+    removeBars.selectAll("line").remove();
+    removeBars.selectAll("text.bar-value").remove();
+    removeBars.selectAll("text.overlap-value").remove();
+    removeBars.selectAll("text.bar-text").remove();
+    removeBars.selectAll("rect.valuesRect").remove();
+    removeBars.remove();
 }
 private syncSelectionState(
     selection: Selection<BaseType, IBarChartDataPoint, BaseType, any>,
