@@ -47,6 +47,8 @@ import {
 import { getCategoricalObjectValue, getValue } from "./objectEnumerationUtility";
 import ISelectionId = powerbi.visuals.ISelectionId;
 import { isNullOrEmpty, isNullOrUndefinedOrWhiteSpaceString } from "powerbi-visuals-utils-formattingutils/lib/src/stringExtensions";
+import { equal } from "assert";
+import { locationConverter } from "powerbi-visuals-utils-chartutils";
 //import { EnumType } from "typescript";
 //import { isEmpty } from "powerbi-visuals-utils-svgutils/lib/shapes/shapes";
 
@@ -242,9 +244,8 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
         || !dataViews[0].categorical
         || !dataViews[0].categorical.categories
         || !dataViews[0].categorical.categories[0].source
-        || !dataViews[0].categorical.values) {
-        return viewModel;
-    }
+        || !dataViews[0].categorical.values
+        ){return viewModel;}
 
     const categorical = dataViews[0].categorical;
     const category = categorical.categories[0];
@@ -276,6 +277,14 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
         value: dataValue,
         value2: categorical.values[categorical.values.length - 1],
     });
+
+    let valueFormatterForOverlap: IValueFormatter = valueFormatter.create({
+        format: valueFormatter.getFormatStringByColumn(category.source),
+        value: dataValue,
+        value2: categorical.values[categorical.values.length - 1],
+    });
+
+
 
 
     const IBarChartDataPoints: IBarChartDataPoint[] = [];
@@ -391,18 +400,18 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
 
         const format = valueFormatter.getFormatStringByColumn(
             metadata.columns[getMetadataIndexFor(
-                categorical.values[1].source.displayName, metadata.columns)]);
+                categorical.values[0].source.displayName, metadata.columns)]);
 
         valueFormatterForCategories = valueFormatter.create({
-            format,
+            format: valueFormatter.getFormatStringByColumn(
+                metadata.columns[getMetadataIndexForLabelValues(metadata.columns)]),
             value: dataValue,
             value2: categorical.values[categorical.values.length - 1],
         });
-
-        const valueFormatterForOverlap = valueFormatter.create({
+        
+        valueFormatterForOverlap = valueFormatter.create({
             format: valueFormatter.getFormatStringByColumn(
-                metadata.columns[getMetadataIndexFor(
-                    categorical.values[1].source.displayName, metadata.columns)]),
+                metadata.columns[getMetadataIndexForoverlapValues(metadata.columns)]),
             value: dataValue,
             value2: categorical.values[categorical.values.length - 1],
         });
@@ -547,8 +556,9 @@ export class BarChart implements IVisual {
      */
     public update(options: VisualUpdateOptions) {
 
-        if (!options || !options.dataViews || !options.dataViews[0] || !options.dataViews[1] || !options.dataViews[2]) {
+        if (!options || !options.dataViews || !options.dataViews[1]) {
             this.clearViewport(); }
+            
         this.events.renderingStarted(options);
         const viewModel: IBarChartViewModel = visualTransform(options, this.host);
         const settings = this.IBarChartSettings = viewModel.settings;
@@ -644,10 +654,6 @@ export class BarChart implements IVisual {
         let bars = this.barContainer
             .selectAll("g.bar")
             .data(viewModel.dataPoints);
-
-        if (viewModel.dataPoints.length === 0) {
-            this.clearViewport();
-        }
 
         bars
             .enter()
@@ -811,7 +817,7 @@ if (viewModel.settings.experimental.show){
     .attr("fill", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10   
         ? viewModel.settings.experimental.InnerbarsLabel.solid.color 
         : viewModel.settings.experimental.OuterbarsLabel.solid.color; })
-    .text((d) => { return <string> d.formattedOverlapValue ; });
+    .text((d) => { return  <string> ( d.formattedOverlapValue === "(Blank)" || d.formattedOverlapValue === "NaN" ? "" :  d.formattedOverlapValue);  });
     textValues2.exit().remove();
 } else {
     const textValues2 = bars.selectAll("text.overlap-value")
@@ -858,8 +864,9 @@ if (viewModel.settings.experimental.show){
             .attr("fill", viewModel.settings.showBarLabels.textColor.solid.color)
             .attr("text-anchor", (d) => { return  viewModel.settings.showBarLabels.alignBarLabels === true ?"end" :"start"; 
             })
-            .text((d) => { return <string> ( d.LabelformattedValue.length === 0 ? "" :  d.LabelformattedValue); });
-            
+            //.text((d) => { return <string> ( d.LabelformattedValue  === "(Blank)" || d.LabelformattedValue  === "NaN" ? "" :  d.LabelformattedValue); });
+            .text((d) => { return <string> (d.LabelformattedValue); });
+
         textValues.exit().remove();
     } else {
         const valuesRect = bars.selectAll("rect.valuesRect")
@@ -1219,6 +1226,28 @@ for (i = 0; i < values.length; i++) {
         return i;
     }
 }
+return i;
+}
+function getMetadataIndexForoverlapValues(values: any) {
+    let i;
+    
+    for (i = 0; i < values.length; i++) {
+    
+        if (!!values[i].roles.overlapValues) {
+            return i;
+        }
+    }
+return i;
+}
+function getMetadataIndexForLabelValues(values: any) {
+    let i;
+    
+    for (i = 0; i < values.length; i++) {
+    
+        if (!!values[i].roles.LabelValues) {
+            return i;
+        }
+    }
 return i;
 }
 function getIndexForDataMax(arr) {
