@@ -46,6 +46,7 @@ import {
 
 import { getCategoricalObjectValue, getValue } from "./objectEnumerationUtility";
 import ISelectionId = powerbi.visuals.ISelectionId;
+import { isNullOrEmpty, isNullOrUndefinedOrWhiteSpaceString } from "powerbi-visuals-utils-formattingutils/lib/src/stringExtensions";
 //import { EnumType } from "typescript";
 //import { isEmpty } from "powerbi-visuals-utils-svgutils/lib/shapes/shapes";
 
@@ -240,7 +241,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
         || !dataViews[0]
         || !dataViews[0].categorical
         || !dataViews[0].categorical.categories
-        //|| !dataViews[0].categorical.categories[0].source
+        || !dataViews[0].categorical.categories[0].source
         || !dataViews[0].categorical.values) {
         return viewModel;
     }
@@ -390,7 +391,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
 
         const format = valueFormatter.getFormatStringByColumn(
             metadata.columns[getMetadataIndexFor(
-                categorical.values[0].source.displayName, metadata.columns)]);
+                categorical.values[1].source.displayName, metadata.columns)]);
 
         valueFormatterForCategories = valueFormatter.create({
             format,
@@ -418,7 +419,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             category: category.values[i] + "",
             color: getCategoricalObjectValue<Fill> (category, i, "colorSelector", "fill", defaultColor).solid.color,
             currTextWidth,
-            formattedOverlapValue: overlapDataValue.length > 0 ? valueFormatterForOverlap.format(overlapDataValue[i]) : null,
+            formattedOverlapValue: overlapDataValue.length > 0  ? valueFormatterForOverlap.format(overlapDataValue[i]) : null,
             formattedValue: valueFormatterForCategories.format(dataValue.values[i]),
             overlapValue: overlapDataValue.length > 0 ? overlapDataValue[i] : null,
             LabelformattedValue: LabelDataValue.length > 0 ? valueFormatterForCategories.format(LabelDataValue[i]) : null,
@@ -810,7 +811,7 @@ if (viewModel.settings.experimental.show){
     .attr("fill", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10   
         ? viewModel.settings.experimental.InnerbarsLabel.solid.color 
         : viewModel.settings.experimental.OuterbarsLabel.solid.color; })
-    .text((d) => { return <string>  d.formattedOverlapValue; });
+    .text((d) => { return <string> d.formattedOverlapValue ; });
     textValues2.exit().remove();
 } else {
     const textValues2 = bars.selectAll("text.overlap-value")
@@ -836,13 +837,16 @@ if (viewModel.settings.experimental.show){
             .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
             .attr("rx", 2)
             .attr("ry", 2);
+
         valuesRect.exit().remove();
         const textValues = bars
             .selectAll("text.bar-value").data((d) => [d]);
+
         mergeElement = textValues
             .enter()
             .append<SVGElement> ("text")
             .classed("bar-value", true)
+
         textValues.merge(mergeElement).attr("height", yHeight)
             .attr("y", (d) => getTextPositionY(d.category, textProperties))
             .attr("x", (d) => {
@@ -854,7 +858,8 @@ if (viewModel.settings.experimental.show){
             .attr("fill", viewModel.settings.showBarLabels.textColor.solid.color)
             .attr("text-anchor", (d) => { return  viewModel.settings.showBarLabels.alignBarLabels === true ?"end" :"start"; 
             })
-            .text((d) => { return <string> d.LabelformattedValue; });
+            .text((d) => { return <string> ( d.LabelformattedValue.length === 0 ? "" :  d.LabelformattedValue); });
+            
         textValues.exit().remove();
     } else {
         const valuesRect = bars.selectAll("rect.valuesRect")
@@ -1038,7 +1043,7 @@ public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions):
                     highlightColor: this.IBarChartSettings.showBarLabels.highlightColor,
                     show: this.IBarChartSettings.showBarLabels.show,
                     textColor: this.IBarChartSettings.showBarLabels.textColor,
-                    alignBarLabels: this.IBarChartSettings.showBarLabels.alignBarLabels,
+                    // alignBarLabels: this.IBarChartSettings.showBarLabels.alignBarLabels, // Disable bug
                 },
                 selector: null,
             });
