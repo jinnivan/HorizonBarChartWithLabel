@@ -1258,7 +1258,7 @@ function getMetadataIndexForoverlapValues(values: any) {
     
     for (i = 0; i < values.length; i++) {
     
-        if (!!values[i].roles.overlapValues) {
+        if (!values[i].roles.overlapValues === false) {
             return i;
         }
     }
@@ -1269,7 +1269,7 @@ function getMetadataIndexForLabelValues(values: any) {
     
     for (i = 0; i < values.length; i++) {
     
-        if (!!values[i].roles.LabelValues) {
+        if (!values[i].roles.LabelValues === false) {
             return i;
         }
     }
