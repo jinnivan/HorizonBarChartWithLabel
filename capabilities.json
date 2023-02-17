@@ -356,59 +356,6 @@
                 }
             }
         },
-        "barShape": {
-            "displayName": "Bar Shape",
-            "properties": {
-                "shape": {
-                    "displayName": "Shape",
-                    "type": {
-                        "enumeration": [
-                            {
-                                "displayName": "Bar",
-                                "value": "Bar"
-                            },
-                            {
-                                "displayName": "Line",
-                                "value": "Line"
-                            },
-                            {
-                                "displayName": "Lollipop",
-                                "value": "Lollipop"
-                            },
-                            {
-                                "displayName": "Hammer Head",
-                                "value": "Hammer Head"
-                            }
-                        ]
-                    }
-                },
-                "labelPosition": {
-                    "displayName": "Label Posistion",
-                    "type": {
-                        "enumeration": [
-                            {
-                                "displayName": "Side",
-                                "value": "Side"
-                            },
-                            {
-                                "displayName": "Top",
-                                "value": "Top"
-                            }
-                        ]
-                    }
-                },
-                "headColor": {
-                    "displayName": "Head",
-                    "type": {
-                        "fill": {
-                            "solid": {
-                                "color": true
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "showBarLabels": {
             "displayName": "Second Label",
             "properties": {
@@ -437,7 +384,14 @@
                             }
                         }
                     }
-                },"alignBarLabels": {
+                },
+                "opacity": {
+                    "displayName": "Opacity",
+                    "type": {
+                        "integer": true
+                    }
+                },
+                "alignBarLabels": {
                     "displayName": "Align Right",
                     "type": {
                         "bool": true

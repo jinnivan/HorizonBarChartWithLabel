@@ -153,6 +153,7 @@ interface IBarChartSettings {
         textColor: any,
         highlightColor: any,
         alignBarLabels: boolean,
+        opacity: number,
     };
     barShape: {
         shape: string,
@@ -222,8 +223,9 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
         },
         showBarLabels: {
             highlightColor: { solid: { color: "#000" } },
+            opacity: 10,
             show: true,
-            textColor: { solid: { color: "#FFF" } },
+            textColor: { solid: { color: "#000" } },
             alignBarLabels: true
         },
         units: {
@@ -348,6 +350,8 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
         showBarLabels: {
             highlightColor: getValue<string> (objects, "showBarLabels", "highlightColor",
             defaultSettings.showBarLabels.highlightColor),
+            opacity: getValue<number> (objects, "showBarLabels", "opacity", 
+            defaultSettings.showBarLabels.opacity),
             show: getValue<boolean> (objects, "showBarLabels", "show",
             defaultSettings.showBarLabels.show),
             textColor: getValue<string> (objects, "showBarLabels", "textColor",
@@ -629,7 +633,7 @@ export class BarChart implements IVisual {
         const offset = textMeasurementService.measureSvgTextWidth(labelProperties) + 30 ;
         const xScale = scaleLinear()
             .domain([0, viewModel.dataMax])
-            .range([0, (viewModel.settings.showBarLabels.show 
+/*             .range([0, (viewModel.settings.showBarLabels.show 
                 ? width - offset - 
                 ((settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
@@ -639,8 +643,10 @@ export class BarChart implements IVisual {
                 ((settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
                 settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset)
-                - 15) ]); // subtracting 40 for padding between the bar and the label
-
+                - 15) ]); // subtracting 40 for padding between the bar and the label */
+            .range([0, (viewModel.settings.showBarLabels.show 
+                ? width - offset - CateOffset - 15 
+                : width - CateOffset - 15) ]); // subtracting 40 for padding between the bar and the label
         // empty rect to take full width for clickable area for clearing selection
         const rectContainer = this.barContainer.selectAll("rect.rect-container").data([1]);
 
@@ -678,15 +684,17 @@ export class BarChart implements IVisual {
 
         rects
             .merge(mergeElement)
-            .attr("x", 
+/*             .attr("x", 
                 (settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
-                settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset)
+                settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset) */
+            .attr("x", CateOffset)
             .attr("y", (d) => yScale(d.category))
-            .attr("height", yHeight /
+/*             .attr("height", yHeight /
                 ((  settings.barShape.shape === "Line" ||
                     settings.barShape.shape === "Lollipop" ||
-                    settings.barShape.shape === "Hammer Head") ? 8 : 1 ))
+                    settings.barShape.shape === "Hammer Head") ? 8 : 1 )) */
+            .attr("height", yHeight)
             .attr("width", (d) => xScale(<number> d.value))
             .attr("fill", viewModel.settings.generalView.barsColor.solid.color)
             .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
@@ -699,11 +707,11 @@ export class BarChart implements IVisual {
             .classed("overlapBar", true);
         overlapRects
             .merge(mergeElement)
-            .attr("x",
+/*             .attr("x",
                 (settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
-                settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset)
-            .attr("y", (d) => yScale(d.category) + ( yHeight /
+                settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset) 
+             .attr("y", (d) => yScale(d.category) + ( yHeight /
             ((  settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
                 settings.barShape.shape === "Hammer Head"
@@ -712,21 +720,23 @@ export class BarChart implements IVisual {
                 settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
                 settings.barShape.shape === "Hammer Head"
-            ) ? 8 : 1.5)) / 2 )
-            .attr("height", yHeight /
+            ) ? 8 : 1.5)) / 2 ) */
+            .attr("x",CateOffset)
+            .attr("y", (d) => yScale(d.category) + ( yHeight / 1 - yHeight /1.5) / 2 )
+/*             .attr("height", yHeight /
                 (
                     (   settings.barShape.shape === "Line" ||
                         settings.barShape.shape === "Lollipop" ||
                         settings.barShape.shape === "Hammer Head"
-                    ) ? 8 : 1.5))
+                    ) ? 8 : 1.5)) */
+            .attr("height", yHeight / 1.5)
             .attr("width", (d) => xScale(<number> d.overlapValue)).merge(mergeElement)
             .attr("fill", viewModel.settings.generalView.overlapColor.solid.color)
             .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
             .attr("selected", (d) => d.selected);
         overlapRects.exit().remove();
-        if (settings.barShape.shape === "Lollipop") {
-            const circle = bars.selectAll("circle").data((d) => [d]);
-
+        /* if (settings.barShape.shape === "Lollipop") {
+            const circle = bars.selectAll("circle").data((d) => [d])
             mergeElement = circle.enter()
                 .append<SVGElement> ("circle")
                 .classed("head", true);
@@ -759,7 +769,7 @@ export class BarChart implements IVisual {
             line.exit().remove();
         } else {
             bars.selectAll("line").remove();
-        }
+        } */
         textProperties = {
             fontFamily: fontFamilyToUse,
             fontSize: fontSizeToUse + "px",
@@ -767,7 +777,7 @@ export class BarChart implements IVisual {
         };
         const texts = bars
             .selectAll("text.bar-text").data((d) => [d]);
-        mergeElement = (settings.barShape.shape === "Line" ||
+        /* mergeElement = (settings.barShape.shape === "Line" ||
         settings.barShape.shape === "Lollipop" ||
         settings.barShape.shape === "Hammer Head") 
         ? texts
@@ -780,13 +790,20 @@ export class BarChart implements IVisual {
             .append<SVGElement> ("text")
             .classed("bar-text", true)
             .attr("text-anchor", "end")
+        ; */
+        mergeElement = texts
+            .enter()
+            .append<SVGElement> ("text")
+            .classed("bar-text", true)
+            .attr("text-anchor", "end")
         ;
         texts.merge(mergeElement)
             .attr("height", yHeight)
             .attr("y", (d) => yScale(d.category) + yHeight / 2 + textMeasurementService.measureSvgTextHeight(textProperties) / 4)
-            .attr("x", (d) => (settings.barShape.shape === "Line" ||
+            .attr("x", (d) => CateOffset - 10)
+/*             .attr("x", (d) => (settings.barShape.shape === "Line" ||
                 settings.barShape.shape === "Lollipop" ||
-                settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset - 10)
+                settings.barShape.shape === "Hammer Head") ? BarChart.Config.xScalePadding : CateOffset - 10) */
             .attr("font-size", fontSizeToUse)
             .attr("font-family", fontFamilyToUse)
             .attr("fill", viewModel.settings.generalView.textColor.solid.color)
@@ -840,7 +857,7 @@ if (viewModel.settings.experimental.show){
             .attr("height", textMeasurementService.measureSvgTextHeight(labelProperties))
             .attr("width", (d) => (d.LabelformattedValue != null ? offset : 0 ))
             .attr("fill", viewModel.settings.showBarLabels.highlightColor.solid.color)
-            .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
+            .attr("fill-opacity", viewModel.settings.showBarLabels.opacity / 100)
             .attr("rx", 2)
             .attr("ry", 2);
 
@@ -977,7 +994,6 @@ if (viewModel.settings.experimental.show){
     }
 
     function getHeadPositionX(value: PrimitiveValue, wid: number) {
-
         if (settings.barShape.shape === "Bar") {
             return xScale(<number> value) > wid ? xScale(<number> value) + 8 : wid + 8;
         } else if (settings.barShape.shape === "Line" ||
@@ -1048,11 +1064,20 @@ public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions):
                 objectName,
                 properties: {
                     highlightColor: this.IBarChartSettings.showBarLabels.highlightColor,
+                    opacity: this.IBarChartSettings.showBarLabels.opacity,
                     show: this.IBarChartSettings.showBarLabels.show,
                     textColor: this.IBarChartSettings.showBarLabels.textColor,
                     // alignBarLabels: this.IBarChartSettings.showBarLabels.alignBarLabels, // Disable bug
                 },
                 selector: null,
+                validValues: {
+                    opacity: {
+                        numberRange: {
+                            max: 100,
+                            min: 0,
+                        },
+                    },
+                },
             });
             break;
         /* case "barShape":
