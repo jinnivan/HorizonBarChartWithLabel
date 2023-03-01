@@ -622,6 +622,9 @@ export class BarChart implements IVisual {
             fontSize: fontSizeToUse + "px",
             text: CateformattedValue,}; 
         const CateOffset = (yHeight > 10 + BarChart.Config.xScalePadding + textMeasurementService.measureSvgTextWidth(CateProperties) ? yHeight/2  : 10 + BarChart.Config.xScalePadding + textMeasurementService.measureSvgTextWidth(CateProperties)); 
+        const indexForOverlapMax = getIndexForOverlapMax(viewModel.dataPoints);
+        const OverlapformattedValue = viewModel.dataPoints.length > 0 ? viewModel.dataPoints[indexForOverlapMax].overlapValue : "";
+
         // MAX Bar Label Range ***********************************/
         const indexForLabelMax = getIndexForLabelMax(viewModel.dataPoints);
         const LabelformattedValue = viewModel.dataPoints.length > 0 ? viewModel.dataPoints[indexForLabelMax].LabelformattedValue : "";
@@ -630,6 +633,12 @@ export class BarChart implements IVisual {
             fontSize: fontSizeToUse + "px",
             text: LabelformattedValue,
         }; 
+
+        //console.log('Visual update',OverlapformattedValue);
+        //console.log('Visual update',LabelformattedValue);
+        //console.log('Visual update',viewModel.dataPoints);
+
+
         const offset = textMeasurementService.measureSvgTextWidth(labelProperties) + 30 ;
         const xScale = scaleLinear()
             .domain([0, viewModel.dataMax])
@@ -695,7 +704,7 @@ export class BarChart implements IVisual {
                     settings.barShape.shape === "Lollipop" ||
                     settings.barShape.shape === "Hammer Head") ? 8 : 1 )) */
             .attr("height", yHeight)
-            .attr("width", (d) => xScale(<number> d.value))
+            .attr("width", (d) =>  (xScale(<number> d.value)>0?xScale(<number> d.value):0))
             .attr("fill", viewModel.settings.generalView.barsColor.solid.color)
             .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
             .attr("selected", (d) => d.selected);
@@ -730,7 +739,7 @@ export class BarChart implements IVisual {
                         settings.barShape.shape === "Hammer Head"
                     ) ? 8 : 1.5)) */
             .attr("height", yHeight / 1.5)
-            .attr("width", (d) => xScale(<number> d.overlapValue)).merge(mergeElement)
+            .attr("width", (d) => xScale(<number> d.overlapValue)>0?xScale(<number> d.overlapValue):0).merge(mergeElement)
             .attr("fill", viewModel.settings.generalView.overlapColor.solid.color)
             .attr("fill-opacity", viewModel.settings.generalView.opacity / 100)
             .attr("selected", (d) => d.selected);
@@ -813,33 +822,33 @@ export class BarChart implements IVisual {
 
 ///////////////////////////////////////////////////////////////////////////////// Bar Label       
 
-if (viewModel.settings.experimental.show){
-    const textValues2 = bars
-    .selectAll("text.overlap-value").data((d) => [d]);
-    mergeElement = textValues2
-    .enter()
-    .append<SVGElement> ("text")
-    .classed("overlap-value", true)
-    textValues2.merge(mergeElement).attr("height", yHeight)
-    .attr("y", (d) => getTextPositionY(d.category, textProperties))
-    .attr("x", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10 
-        ? CateOffset + xScale(<number> d.overlapValue) - 5 
-        : CateOffset + xScale(<number> d.overlapValue) + 5;
-    })
-    .attr("text-anchor", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10 ? "end" : "start"; 
-    })
-    .attr("font-size", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10 ? fontSizeToUse-1 : fontSizeToUse;
-    })
-    .attr("font-family", fontFamilyToUse) 
-    .attr("fill", (d) => { return  xScale(<number> d.overlapValue) > getWidth( d.formattedOverlapValue)+ 10   
-        ? viewModel.settings.experimental.InnerbarsLabel.solid.color 
-        : viewModel.settings.experimental.OuterbarsLabel.solid.color; })
-    .text((d) => { return  <string> ( d.formattedOverlapValue === "(Blank)" || d.formattedOverlapValue === "NaN" ? "" :  d.formattedOverlapValue);  });
-    textValues2.exit().remove();
-} else {
-    const textValues2 = bars.selectAll("text.overlap-value")
-    textValues2.remove()
-}
+    if (viewModel.settings.experimental.show && OverlapformattedValue > 0 ){
+        const textValues2 = bars.selectAll("text.overlap-value").data((d) => [d]);
+        mergeElement = textValues2
+            .enter()
+            .append<SVGElement> ("text")
+            .classed("overlap-value", true)
+        textValues2.merge(mergeElement).attr("height", yHeight)
+            .attr("y", (d) => getTextPositionY(d.category, textProperties))
+            .attr("x", (d) => { return  xScale( <number> d.overlapValue>0?<number> d.overlapValue:0 ) > getWidth( d.formattedOverlapValue === "(Blank)" || d.formattedOverlapValue === "NaN" ? "" :  d.formattedOverlapValue )+ 10 
+                ? CateOffset + xScale( <number> d.overlapValue>0?<number> d.overlapValue:0  ) - 5 
+                : CateOffset + xScale( <number> d.overlapValue>0?<number> d.overlapValue:0  ) + 5;
+            })
+            .attr("text-anchor", (d) => { return  xScale( <number> d.overlapValue>0?<number> d.overlapValue:0 ) > getWidth( d.formattedOverlapValue)+ 10 ? "end" : "start"; 
+            })
+            .attr("font-size", (d) => { return  xScale( <number> d.overlapValue>0?<number> d.overlapValue:0 ) > getWidth( d.formattedOverlapValue)+ 10 ? fontSizeToUse-1 : fontSizeToUse;
+            })
+            .attr("font-family", fontFamilyToUse) 
+            .attr("fill", (d) => { return  xScale( <number> d.overlapValue>0?<number> d.overlapValue:0 ) > getWidth( d.formattedOverlapValue)+ 10   
+                ? viewModel.settings.experimental.InnerbarsLabel.solid.color 
+                : viewModel.settings.experimental.OuterbarsLabel.solid.color; })
+            .text((d) => { return  <string> ( d.formattedOverlapValue === "(Blank)" || d.formattedOverlapValue === "NaN" ? "" :  d.formattedOverlapValue);  });
+            textValues2.exit().remove();
+    } else {
+        const textValues2 = bars.selectAll("text.overlap-value")
+        textValues2.remove()
+    }
+
 ////////////////////////////////////////////////////////////////////// Second Label
     if (viewModel.settings.showBarLabels.show) {
         const valuesRect = bars.selectAll("rect.valuesRect").data((d) => [d]);
@@ -855,7 +864,7 @@ if (viewModel.settings.experimental.show){
             .attr("y", (d) => getTextPositionY(d.category, labelProperties) - 3
                 / 4 * textMeasurementService.measureSvgTextHeight(labelProperties))
             .attr("height", textMeasurementService.measureSvgTextHeight(labelProperties))
-            .attr("width", (d) => (d.LabelformattedValue != null ? offset : 0 ))
+            .attr("width", (d) => (d.LabelformattedValue != null ? offset : 0 )>0?(d.LabelformattedValue != null ? offset : 0 ):0)
             .attr("fill", viewModel.settings.showBarLabels.highlightColor.solid.color)
             .attr("fill-opacity", viewModel.settings.showBarLabels.opacity / 100)
             .attr("rx", 2)
@@ -1186,7 +1195,7 @@ private syncSelectionState(
         selection.style("fill-opacity", null);
         return;
     }
-
+    /*
     const self = this.isSelectionIdInArray;
     selection.each((barDataPoint , i , nodes) => {
         const isSelected: boolean = self(selectionIds, barDataPoint.selectionId);
@@ -1196,9 +1205,9 @@ private syncSelectionState(
                 ? BarChart.Config.solidOpacity
                 : BarChart.Config.transparentOpacity,
         );
-    });
-
+    });*/
 }
+
 private getTooltipData(value: any): VisualTooltipDataItem[] {
 
     const tooltip = [];
@@ -1276,50 +1285,66 @@ function getMetadataIndexForLabelValues(values: any) {
 return i;
 }
 function getIndexForDataMax(arr) {
-if (arr.length < 1) {
-    return 0;
-}
-let i = 0;
-let p = 0;
-let max = arr[i].value;
-for (i = 1; i < arr.length; i++) {
-
-    if (arr[i].value > max) {
-        max = arr[i].value;
-        p = i;
+    if (arr.length < 1) {
+        return 0;
     }
-}
-return p;
+    let i = 0;
+    let p = 0;
+    let max = arr[i].value;
+    for (i = 1; i < arr.length; i++) {
+
+        if (arr[i].value > max) {
+            max = arr[i].value;
+            p = i;
+        }
+    }
+    return p;
 }
 function getIndexForCateMax(arr) {
-if (arr.length < 1) {
-    return -1;
-}
-let i = 0;
-let p = 0;
-let max = arr[i].currTextWidth;
-for (i = 1; i < arr.length; i++) {
-
-    if (arr[i].currTextWidth > max) {
-        max = arr[i].currTextWidth;
-        p = i;
+    if (arr.length < 1) {
+        return -1;
     }
-}
-return p;
+    let i = 0;
+    let p = 0;
+    let max = arr[i].currTextWidth;
+    for (i = 1; i < arr.length; i++) {
+
+        if (arr[i].currTextWidth > max) {
+            max = arr[i].currTextWidth;
+            p = i;
+        }
+    }
+    return p;
 }
 function getIndexForLabelMax(arr) {
-if (arr.length < 1) {
-    return -1;
-}
-let i = 0;
-let p = 0;
-let max = arr[i].LabelformattedValue ;
-for (i = 1; i < arr.length; i++) {
-
-    if (arr[i].LabelformattedValue > max) {
-        max = arr[i].LabelformattedValue;
-        p = i;
+    if (arr.length < 1) {
+        return -1;
     }
+    let i = 0;
+    let p = 0;
+    let max = arr[i].LabelformattedValue ;
+    for (i = 1; i < arr.length; i++) {
+
+        if (arr[i].LabelformattedValue > max) {
+            max = arr[i].LabelformattedValue;
+            p = i;
+        }
+    }
+    return p;
 }
-return p;
-}
+function getIndexForOverlapMax(arr) {
+    if (arr.length < 1) {
+        return -1;
+    }
+    let i = 0;
+    let p = 0;
+    let max = arr[i].formattedOverlapValue ;
+    for (i = 1; i < arr.length; i++) {
+    
+        if (arr[i].formattedOverlapValue > max) {
+            max = arr[i].formattedOverlapValue;
+            p = i;
+        }
+    }
+    return p;
+ }
