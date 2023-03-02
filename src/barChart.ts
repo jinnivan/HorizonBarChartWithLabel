@@ -52,6 +52,16 @@ import { locationConverter } from "powerbi-visuals-utils-chartutils";
 //import { EnumType } from "typescript";
 //import { isEmpty } from "powerbi-visuals-utils-svgutils/lib/shapes/shapes";
 
+export function isSelectionIdInArray(selectionIds: ISelectionId[], selectionId: ISelectionId): boolean {
+    if (!selectionIds || !selectionId) {
+        return false;
+    }
+
+    return selectionIds.some((currentSelectionId: ISelectionId) => {
+        return currentSelectionId.includes(selectionId);
+    });
+}
+
 /**
  * An interface for reporting rendering events
  */
@@ -1162,7 +1172,8 @@ public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions):
 public destroy(): void {
     // Perform any cleanup tasks here
 }
-private isSelectionIdInArray(selectionIds: ISelectionId[], selectionId: ISelectionId): boolean {
+
+/*private isSelectionIdInArray(selectionIds: ISelectionId[], selectionId: ISelectionId): boolean {
     if (!selectionIds || !selectionId) {
         return false;
     }
@@ -1171,6 +1182,7 @@ private isSelectionIdInArray(selectionIds: ISelectionId[], selectionId: ISelecti
         return currentSelectionId.includes(selectionId);
     });
 }
+*/
 
 private clearViewport(): void {
     const removeBars = this.barContainer.selectAll("g.bar");
@@ -1187,6 +1199,7 @@ private clearViewport(): void {
 private syncSelectionState(
     selection: Selection<BaseType, IBarChartDataPoint, BaseType, any>,
     selectionIds: ISelectionId[]): void {
+
     if (!selection || !selectionIds) {
         return;
     }
@@ -1195,17 +1208,16 @@ private syncSelectionState(
         selection.style("fill-opacity", null);
         return;
     }
-    /*
-    const self = this.isSelectionIdInArray;
+
     selection.each((barDataPoint , i , nodes) => {
-        const isSelected: boolean = self(selectionIds, barDataPoint.selectionId);
+        const isSelected: boolean = isSelectionIdInArray(selectionIds, barDataPoint.selectionId);
         select(nodes[i]).style(
             "fill-opacity",
             isSelected
                 ? BarChart.Config.solidOpacity
                 : BarChart.Config.transparentOpacity,
         );
-    });*/
+    });
 }
 
 private getTooltipData(value: any): VisualTooltipDataItem[] {
