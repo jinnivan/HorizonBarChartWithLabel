@@ -1173,16 +1173,6 @@ public destroy(): void {
     // Perform any cleanup tasks here
 }
 
-private isSelectionIdInArray(selectionIds: ISelectionId[], selectionId: ISelectionId): boolean {
-    if (!selectionIds || !selectionId) {
-        return false;
-    }
-
-    return selectionIds.some((currentSelectionId: ISelectionId) => {
-        return currentSelectionId.includes(selectionId);
-    });
-}
-
 private clearViewport(): void {
     const removeBars = this.barContainer.selectAll("g.bar");
     removeBars.selectAll("rect.bar").remove();
@@ -1195,9 +1185,11 @@ private clearViewport(): void {
     removeBars.selectAll("rect.valuesRect").remove();
     removeBars.remove();
 }
+
 private syncSelectionState(
     selection: Selection<BaseType, IBarChartDataPoint, BaseType, any>,
     selectionIds: ISelectionId[]): void {
+
     if (!selection || !selectionIds) {
         return;
     }
@@ -1206,12 +1198,6 @@ private syncSelectionState(
         selection.style("fill-opacity", null);
         return;
     }
-<<<<<<< HEAD
-
-=======
-    
-    const self = this.isSelectionIdInArray;
->>>>>>> ec87a269b27e0ec5664b300d308a5131a4a9f24d
     selection.each((barDataPoint , i , nodes) => {
         const isSelected: boolean = isSelectionIdInArray(selectionIds, barDataPoint.selectionId);
         select(nodes[i]).style(
@@ -1220,7 +1206,7 @@ private syncSelectionState(
                 ? BarChart.Config.solidOpacity
                 : BarChart.Config.transparentOpacity,
         );
-    });*/
+    });
 }
 
 private getTooltipData(value: any): VisualTooltipDataItem[] {
