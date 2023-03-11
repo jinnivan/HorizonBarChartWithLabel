@@ -1195,7 +1195,7 @@ private syncSelectionState(
         selection.style("fill-opacity", null);
         return;
     }
-    /*
+    
     const self = this.isSelectionIdInArray;
     selection.each((barDataPoint , i , nodes) => {
         const isSelected: boolean = self(selectionIds, barDataPoint.selectionId);
@@ -1205,7 +1205,7 @@ private syncSelectionState(
                 ? BarChart.Config.solidOpacity
                 : BarChart.Config.transparentOpacity,
         );
-    });*/
+    });
 }
 
 private getTooltipData(value: any): VisualTooltipDataItem[] {
