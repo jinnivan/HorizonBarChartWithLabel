@@ -1208,7 +1208,12 @@ private syncSelectionState(
         selection.style("fill-opacity", null);
         return;
     }
+<<<<<<< HEAD
 
+=======
+    
+    const self = this.isSelectionIdInArray;
+>>>>>>> ec87a269b27e0ec5664b300d308a5131a4a9f24d
     selection.each((barDataPoint , i , nodes) => {
         const isSelected: boolean = isSelectionIdInArray(selectionIds, barDataPoint.selectionId);
         select(nodes[i]).style(
