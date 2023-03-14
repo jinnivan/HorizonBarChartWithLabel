@@ -243,7 +243,7 @@ function visualTransform(options: VisualUpdateOptions, host: IVisualHost): IBarC
             tooltipUnits: 0,
         },
     };
-    
+
     const viewModel: IBarChartViewModel = {
         dataMax: 0,
         dataPoints: [],
@@ -572,7 +572,7 @@ export class BarChart implements IVisual {
 
         if (!options || !options.dataViews || !options.dataViews[1]) {
             this.clearViewport(); }
-            
+
         this.events.renderingStarted(options);
         const viewModel: IBarChartViewModel = visualTransform(options, this.host);
         const settings = this.IBarChartSettings = viewModel.settings;
@@ -1198,6 +1198,7 @@ private syncSelectionState(
         selection.style("fill-opacity", null);
         return;
     }
+
     selection.each((barDataPoint , i , nodes) => {
         const isSelected: boolean = isSelectionIdInArray(selectionIds, barDataPoint.selectionId);
         select(nodes[i]).style(
